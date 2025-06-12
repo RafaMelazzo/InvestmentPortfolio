@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-GetMainOptions();
+﻿GetMainOptions();
 
 void Option1()
 {
@@ -46,28 +44,31 @@ void GetMainOptions()
     Console.WriteLine("1 - Opção 1");
     Console.WriteLine("2 - Opção 2");
     Console.WriteLine("3 - Opção 3");
-    Console.WriteLine("00 - Sair");
+    Console.WriteLine("99 - Sair");
+
+    // TODO: Resolve the 'tail recursive' call to 'GetMainOptions()' in the default case of the switch statement
+    // using `do...while` loop instead of recursion.
 
     Console.Write("\nDigite o número da opção desejada: ");
-    var option = int.Parse(Console.ReadLine()!);
+    var option = Console.ReadLine()!;
 
     switch (option)
     {
-        case 1:
+        case "1":
             Option1();
             break;
-        case 2:
+        case "2":
             Option2();
             break;
-        case 3:
+        case "3":
             Option3();
             break;
-        case 00:
+        case "99":
             ExitProgram();
             break;
         default:
             Console.Clear();
-            Console.WriteLine("\nOpção inválida. Por favor, tente novamente");
+            Console.WriteLine($"\nOpção '{option}' inválida. Por favor, escolha uma das opções disponíveis abaixo.");
             GetMainOptions();
             break;
     }
