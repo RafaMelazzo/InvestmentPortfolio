@@ -1,10 +1,56 @@
-﻿GetMainOptions();
+﻿WelcomeScreen();
+return;
+
+void WelcomeScreen()
+{
+    Console.Clear();
+    Console.WriteLine("\nBem-vindo à sua carteira de investimentos!");
+    Console.WriteLine("Para começar, selecione uma das opções abaixo.");
+    GetMainOptions();
+}
+
+void GetMainOptions()
+{
+    do
+    {
+        Console.WriteLine("\nOPÇÕES:");
+        Console.WriteLine("1 - Opção 1");
+        Console.WriteLine("2 - Opção 2");
+        Console.WriteLine("3 - Opção 3");
+        Console.WriteLine("99 - Sair");
+
+        Console.Write("\nDigite o número da opção desejada: ");
+        var option = Console.ReadLine()!;
+
+        switch (option)
+        {
+            case "1":
+                Option1();
+                break;
+            case "2":
+                Option2();
+                break;
+            case "3":
+                Option3();
+                break;
+            case "99":
+                ExitProgram();
+                break;
+            default:
+                Console.Clear();
+                Console.WriteLine($"\nOpção \"{option}\" inválida. Por favor, escolha uma das opções disponíveis abaixo.");
+                GetMainOptions();
+                break;
+        }
+    } while (false);
+}
 
 void Option1()
 {
     Console.Clear();
     Console.WriteLine("\nVocê acessou a Opção 1.");
     BackToStart();
+    Console.WriteLine("\nESTE TEXTO NUNCA SERÁ EXIBIDO."); // TODO: Remove this line
 }
 
 void Option2()
@@ -35,41 +81,4 @@ void BackToStart()
     Console.ReadKey();
     Console.Clear();
     GetMainOptions();
-}
-
-void GetMainOptions()
-{
-    
-    Console.WriteLine("\nOPÇÕES:");
-    Console.WriteLine("1 - Opção 1");
-    Console.WriteLine("2 - Opção 2");
-    Console.WriteLine("3 - Opção 3");
-    Console.WriteLine("99 - Sair");
-
-    // TODO: Resolve the 'tail recursive' call to 'GetMainOptions()' in the default case of the switch statement
-    // using `do...while` loop instead of recursion.
-
-    Console.Write("\nDigite o número da opção desejada: ");
-    var option = Console.ReadLine()!;
-
-    switch (option)
-    {
-        case "1":
-            Option1();
-            break;
-        case "2":
-            Option2();
-            break;
-        case "3":
-            Option3();
-            break;
-        case "99":
-            ExitProgram();
-            break;
-        default:
-            Console.Clear();
-            Console.WriteLine($"\nOpção '{option}' inválida. Por favor, escolha uma das opções disponíveis abaixo.");
-            GetMainOptions();
-            break;
-    }
 }
