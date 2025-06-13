@@ -11,6 +11,9 @@ void WelcomeScreen()
 
 void GetMainOptions()
 {
+    string[] options = ["1", "2", "3", "99"];
+    string option;
+    
     do
     {
         Console.WriteLine("\nOPÇÕES:");
@@ -20,7 +23,7 @@ void GetMainOptions()
         Console.WriteLine("99 - Sair");
 
         Console.Write("\nDigite o número da opção desejada: ");
-        var option = Console.ReadLine()!;
+        option = Console.ReadLine()!;
 
         switch (option)
         {
@@ -38,11 +41,12 @@ void GetMainOptions()
                 break;
             default:
                 Console.Clear();
-                Console.WriteLine($"\nOpção \"{option}\" inválida. Por favor, escolha uma das opções disponíveis abaixo.");
-                GetMainOptions();
+                Console.WriteLine($"\nOpção \"{option}\" inválida.");
+                // TODO: Implementar tratamento de erro para opções inválidas
+                BackToStart();
                 break;
         }
-    } while (false);
+    } while (options.Contains(option));
 }
 
 void Option1()
@@ -50,7 +54,7 @@ void Option1()
     Console.Clear();
     Console.WriteLine("\nVocê acessou a Opção 1.");
     BackToStart();
-    Console.WriteLine("\nESTE TEXTO NUNCA SERÁ EXIBIDO."); // TODO: Remove this line
+    Console.WriteLine("\nESTE TEXTO AGORA É EXIBIDO."); // TODO: Remove this line
 }
 
 void Option2()
@@ -80,5 +84,4 @@ void BackToStart()
     Console.WriteLine("\nDigite qualquer tecla para retornar ao menu.");
     Console.ReadKey();
     Console.Clear();
-    GetMainOptions();
 }
