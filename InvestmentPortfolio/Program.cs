@@ -11,7 +11,7 @@ void WelcomeScreen()
 
 void GetMainOptions()
 {
-    do
+    while (true)
     {
         Console.WriteLine("\nOPÇÕES:");
         Console.WriteLine("1 - Opção 1");
@@ -40,7 +40,7 @@ void GetMainOptions()
                 ShowError($"Opção \"{option}\" inválida.");
                 break;
         }
-    } while (true);
+    }
 }
 
 void Option1()
@@ -48,7 +48,6 @@ void Option1()
     Console.Clear();
     Console.WriteLine("\nVocê acessou a Opção 1.");
     BackToStart();
-    Console.WriteLine("\nTESTE OPÇÃO 1."); // TODO: Remove this line
 }
 
 void Option2()
@@ -56,7 +55,6 @@ void Option2()
     Console.Clear();
     Console.WriteLine("\nVocê acessou a Opção 2.");
     BackToStart();
-    Console.WriteLine("\nTESTE OPÇÃO 2."); // TODO: Remove this line
 }
 
 void Option3()
@@ -64,7 +62,6 @@ void Option3()
     Console.Clear();
     Console.WriteLine("\nVocê acessou a Opção 3.");
     BackToStart();
-    Console.WriteLine("\nTESTE OPÇÃO 3."); // TODO: Remove this line
 }
 
 void ShowError(string message)
@@ -72,7 +69,6 @@ void ShowError(string message)
     Console.Clear();
     Console.WriteLine($"\nErro: {message}");
     BackToStart();
-    Console.WriteLine("\nTESTE ERRO."); // TODO: Remove this line
 }
 
 void ExitProgram()
