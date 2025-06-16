@@ -11,9 +11,6 @@ void WelcomeScreen()
 
 void GetMainOptions()
 {
-    string[] options = ["1", "2", "3", "99"];
-    string option;
-    
     do
     {
         Console.WriteLine("\nOPÇÕES:");
@@ -23,7 +20,7 @@ void GetMainOptions()
         Console.WriteLine("99 - Sair");
 
         Console.Write("\nDigite o número da opção desejada: ");
-        option = Console.ReadLine()!;
+        var option = Console.ReadLine()!;
 
         switch (option)
         {
@@ -40,13 +37,10 @@ void GetMainOptions()
                 ExitProgram();
                 break;
             default:
-                Console.Clear();
-                Console.WriteLine($"\nOpção \"{option}\" inválida.");
-                // TODO: Implementar tratamento de erro para opções inválidas
-                BackToStart();
+                ShowError($"Opção \"{option}\" inválida.");
                 break;
         }
-    } while (options.Contains(option));
+    } while (true);
 }
 
 void Option1()
@@ -54,7 +48,7 @@ void Option1()
     Console.Clear();
     Console.WriteLine("\nVocê acessou a Opção 1.");
     BackToStart();
-    Console.WriteLine("\nESTE TEXTO AGORA É EXIBIDO."); // TODO: Remove this line
+    Console.WriteLine("\nTESTE OPÇÃO 1."); // TODO: Remove this line
 }
 
 void Option2()
@@ -62,6 +56,7 @@ void Option2()
     Console.Clear();
     Console.WriteLine("\nVocê acessou a Opção 2.");
     BackToStart();
+    Console.WriteLine("\nTESTE OPÇÃO 2."); // TODO: Remove this line
 }
 
 void Option3()
@@ -69,6 +64,15 @@ void Option3()
     Console.Clear();
     Console.WriteLine("\nVocê acessou a Opção 3.");
     BackToStart();
+    Console.WriteLine("\nTESTE OPÇÃO 3."); // TODO: Remove this line
+}
+
+void ShowError(string message)
+{
+    Console.Clear();
+    Console.WriteLine($"\nErro: {message}");
+    BackToStart();
+    Console.WriteLine("\nTESTE ERRO."); // TODO: Remove this line
 }
 
 void ExitProgram()
