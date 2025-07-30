@@ -18,33 +18,32 @@ public class Asset(
     public int Quantity { get; set; } = quantity > 0 ? quantity : 1;
     public double PaidPrice { get; set; } = paidPrice > 0 ? paidPrice : currentPrice;
     public DateTime PurchaseDate { get; set; } = purchaseDate == default ? DateTime.Now : purchaseDate;
+    public double ProfitOrLoss => CurrentPrice - PaidPrice;
 
     private bool IsProfit => CurrentPrice >= PaidPrice;
-    
-    private static string GetProfitLossArrow(double paidValue, double currentValue)
+
+    private string GetProfitOrLossArrow()
     {
-        var profitLoss = currentValue - paidValue;
-        return profitLoss > 0 ? "↗ " : profitLoss < 0 ? "↘ " : "→ ";
-    }
-    
-    private static string GetProfitLossColor(double paidValue, double currentValue)
-    {
-        var profitLoss = currentValue - paidValue;
-        return profitLoss > 0 ? "green" : profitLoss < 0 ? "red" : "silver";
+        return ProfitOrLoss > 0 ? "↗ " : ProfitOrLoss < 0 ? "↘ " : "→ ";
     }
 
-    private string GetProfitLoss(double paidValue, double currentValue)
+    private string GetProfitOrLossColor()
     {
-        var profitLoss = currentValue - paidValue;
-        var arrow = GetProfitLossArrow(paidValue, currentValue);
+        return ProfitOrLoss > 0 ? "green" : ProfitOrLoss < 0 ? "red" : "silver";
+    }
+
+    public string GetProfitOrLossCompleteValue(double paidValue, double currentValue)
+    {
+        var color = GetProfitOrLossColor();
+        var arrow = GetProfitOrLossArrow();
         var value = IsProfit
-            ? $"{Helper.DoubleToCurrency(profitLoss)} "
-            : $"-{Helper.DoubleToCurrency(-profitLoss)} ";
+            ? $"{Helper.DoubleToCurrency(ProfitOrLoss)} "
+            : $"-{Helper.DoubleToCurrency(-ProfitOrLoss)} ";
         var percentage = IsProfit 
-            ? $"({(Math.Abs(profitLoss) / paidValue * 100):F2}%)" 
-            : $"(-{(Math.Abs(profitLoss) / paidValue * 100):F2}%)";
+            ? $"({(Math.Abs(ProfitOrLoss) / paidValue * 100):F2}%)" 
+            : $"(-{(Math.Abs(ProfitOrLoss) / paidValue * 100):F2}%)";
 
-        return arrow + value + percentage;
+        return $"[{color}]{arrow + value + percentage}[/]";
     }
     
     public static void PrintAssetDetails(Asset asset)
@@ -59,9 +58,6 @@ public class Asset(
 
     public void AddRowToTable(Table table)
     {
-        var color = GetProfitLossColor(PaidPrice, CurrentPrice);
-        var profitLoss = GetProfitLoss(PaidPrice, CurrentPrice);
-        
         table.AddRow(
             Symbol,
             Name,
@@ -70,7 +66,7 @@ public class Asset(
             PurchaseDate.ToString("dd/MM/yyyy"),
             $"{Helper.DoubleToCurrency(PaidPrice)}\n({Helper.DoubleToCurrency(PaidPrice * Quantity)})",
             $"{Helper.DoubleToCurrency(CurrentPrice)}\n({Helper.DoubleToCurrency(CurrentPrice * Quantity)})",
-            $"[{color}]{profitLoss}[/]"
+            GetProfitOrLossCompleteValue(PaidPrice, CurrentPrice)
         );
     }
 }

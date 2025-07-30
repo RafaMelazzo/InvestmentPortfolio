@@ -21,8 +21,9 @@ void WelcomeScreen()
         Console.WriteLine("Para começar, selecione uma das opções abaixo.");
         
         AnsiConsole.MarkupLine("\n[bold orange3]OPÇÕES:[/]");
-        AnsiConsole.MarkupLine("[bold blue] 1[/]: Adicionar ativos na carteira");
-        AnsiConsole.MarkupLine("[bold blue] 2[/]: Visualizar meus ativos");
+        AnsiConsole.MarkupLine("[bold blue] 1[/]: Visualizar ativos da minha carteira");
+        AnsiConsole.MarkupLine("[bold blue] 2[/]: Comprar ativos do mercado de ações");
+        AnsiConsole.MarkupLine("[bold blue] 3[/]: Vender ativos da minha carteira");
         AnsiConsole.MarkupLine("[bold blue]99[/]: Sair");
 
         Console.Write("\nDigite o número da opção desejada: ");
@@ -31,10 +32,13 @@ void WelcomeScreen()
         switch (option)
         {
             case "1":
-                AddAssetToPortfolio();
+                ViewAssets();
                 break;
             case "2":
-                ViewAssets();
+                BuyAssetInPortfolio();
+                break;
+            case "3":
+                SellAssetFromPortfolio();
                 break;
             case "99":
                 ExitProgram();
@@ -46,13 +50,23 @@ void WelcomeScreen()
     } while (option != "99");
 }
 
-void AddAssetToPortfolio()
+void ViewAssets()
+{
+    Console.Clear();
+
+    portfolio.GetInfos();
+    portfolio.GetAssetsTable();
+    
+    Helper.BackToStart();
+}
+
+void BuyAssetInPortfolio()
 {
     Console.Clear();
 
     portfolio.GetInfos();
         
-    AnsiConsole.Markup("\n\n[bold orange3]ADICIONAR ATIVO NA CARTEIRA:[/]\n");
+    AnsiConsole.Markup("\n\n[bold orange3]COMPRAR ATIVOS:[/]\n");
     
     var assetSymbol = AnsiConsole.Prompt(
             new TextPrompt<string>("Digite o símbolo do ativo [grey](ex: STNE, AAPL, GOOGL)[/]: ")
@@ -86,12 +100,51 @@ void AddAssetToPortfolio()
     Helper.BackToStart();
 }
 
-void ViewAssets()
+void SellAssetFromPortfolio()
 {
     Console.Clear();
 
     portfolio.GetInfos();
-    portfolio.GetAssetsTable();
+        
+    AnsiConsole.Markup("\n\n[bold orange3]VENDER ATIVOS:[/]\n");
+    
+    if (portfolio.Assets.Count == 0)
+    {
+        AnsiConsole.Markup("[bold red]Nenhum ativo encontrado[/]\n");
+        return;
+    }
+    
+    var assetSymbol = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Selecione o ativo que deseja vender:")
+                .PageSize(10)
+                .MoreChoicesText("[grey](Use as setas para cima/baixo para exibir mais opções)[/]")
+                .AddChoices(
+                    portfolio.Assets
+                        .Select(a => a.Symbol)
+                        .Distinct()
+                        .OrderBy(s => s)
+                        .ToList()
+                )
+        );
+    
+    var assets = portfolio.GetAllAssetsWithSameSymbol(assetSymbol);
+    Portfolio.PrintSameAssetListDetails(assets);
+
+    Console.WriteLine("\n");
+    
+    var quantity = AnsiConsole.Prompt(
+        new TextPrompt<int>("Quantas unidades você deseja vender? [grey](deixe em branco para 1)[/]: ")
+            .DefaultValue(1)
+            .Validate(
+                q => q <= 0
+                    ? ValidationResult.Error("[red]A quantidade deve ser maior que zero.[/]")
+                    : q > assets.Sum(a => a.Quantity)
+                    ? ValidationResult.Error($"[red]Você não possui[/] [bold blue]{q}[/] [red]unidades deste ativo.[/]")
+                    : ValidationResult.Success())
+    );
+    
+    portfolio.SellAsset(assets, quantity);
     
     Helper.BackToStart();
 }
