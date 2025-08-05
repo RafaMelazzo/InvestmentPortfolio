@@ -4,7 +4,7 @@ using Spectre.Console;
 
 namespace InvestmentPortfolio;
 
-public class Portfolio
+public partial class Portfolio
 {
     private readonly string _cpf;
     private double _walletBalance;
@@ -14,7 +14,7 @@ public class Portfolio
         get => _cpf;
         init
         {
-            var cpfNumbers = Regex.Replace(value, @"\D", "");
+            var cpfNumbers = AnyNonDigitRegex().Replace(value, "");
 
             if (cpfNumbers.Length != 11)
             {
@@ -43,9 +43,9 @@ public class Portfolio
             _walletBalance = value;
         }
     }
-    private int Quantity => Assets.Sum(asset => asset.Quantity);
-    private double PaidTotal => Assets.Sum(asset => asset.PaidPrice * asset.Quantity);
-    private double AssetsTotalValue => Assets.Sum(asset => asset.CurrentPrice * asset.Quantity);
+    private int Quantity => Assets.Sum(asset => asset.GetQuantity());
+    private double PaidTotal => Assets.Sum(asset => asset.GetPaidPrice() * asset.GetQuantity());
+    private double AssetsTotalValue => Assets.Sum(asset => asset.GetCurrentPrice() * asset.GetQuantity());
     
     public Portfolio(string name, string cpf, List<Asset>? assets = null, double walletBalance = 0)
     {
@@ -73,7 +73,7 @@ public class Portfolio
     
     private bool HasAsset(string symbol)
     {
-        return Assets.Any(a => a.Symbol.Equals(symbol));
+        return Assets.Any(a => a.GetSymbol().Equals(symbol));
     }
 
     private Asset? GetAssetBySymbol(string symbol, double paidValue = 0)
@@ -82,17 +82,18 @@ public class Portfolio
             throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
 
         if (paidValue <= 0)
-            return Assets.FirstOrDefault(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)) ?? null;
+            return Assets.FirstOrDefault(a => a.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase))
+                   ?? null;
         
         var asset = Assets.FirstOrDefault(
-            a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)
-                      && Helper.NearlyEqual(a.CurrentPrice, paidValue)
+            a => a.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase)
+                      && Helper.NearlyEqual(a.GetCurrentPrice(), paidValue)
         );
 
         if (asset == null)
             return null;
         
-        asset.PaidPrice = paidValue;
+        asset.SetPaidPrice(paidValue);
         return asset;
     }
 
@@ -101,7 +102,7 @@ public class Portfolio
         if (string.IsNullOrWhiteSpace(symbol))
             throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
 
-        return Assets.FindAll(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        return Assets.FindAll(a => a.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase));
     }
 
     public Asset CombineAssetsWithSameSymbol(string symbol)
@@ -120,18 +121,19 @@ public class Portfolio
             default:
             {
                 var combinedAsset = existingAssets
-                    .GroupBy(a => a.Symbol)
+                    .GroupBy(a => a.GetSymbol())
                     .Select(group => new Asset(
                         group.Key,
-                        group.First().Name,
-                        group.First().Type,
-                        group.First().CurrentPrice,
-                        group.Sum(a => a.Quantity),
-                        group.First().PaidPrice,
-                        group.First().PurchaseDate))
+                        group.First().GetName(),
+                        group.First().GetType(),
+                        group.First().GetCurrentPrice(),
+                        group.Sum(a => a.GetQuantity()),
+                        group.First().GetPaidPrice(),
+                        group.First().GetPurchaseDate()))
                     .FirstOrDefault();
 
-                return combinedAsset ?? throw new InvalidOperationException($"Failed to combine assets with symbol: {symbol}");
+                return combinedAsset
+                       ?? throw new InvalidOperationException($"Failed to combine assets with symbol: {symbol}");
             }
         }
     }
@@ -147,7 +149,7 @@ public class Portfolio
         paidValue = paidValue switch
         {
             < 0 => throw new ArgumentOutOfRangeException(nameof(paidValue), "Paid value cannot be negative."),
-            0   => asset.CurrentPrice,
+            0   => asset.GetCurrentPrice(),
             _   => paidValue
         };
         
@@ -155,49 +157,38 @@ public class Portfolio
             purchaseDate = DateTime.Today;
 
         var stockMarketAssets = StockMarket.GetAllAssets();
-        var assetExists = stockMarketAssets.Exists(a => a.Symbol == asset.Symbol);
+        var assetExists = stockMarketAssets.Exists(a => a.GetSymbol() == asset.GetSymbol());
         if (!assetExists)
         {
-            var message = $"Ativo com o símbolo \"{asset.Symbol}\" não encontrado no mercado.";
+            var message = $"Ativo com o símbolo \"{asset.GetSymbol()}\" não encontrado no mercado.";
             Helper.ShowError(message);
             return;
         }
         
-        var portfolioHasAsset = HasAsset(asset.Symbol);
+        var portfolioHasAsset = HasAsset(asset.GetSymbol());
         
         List<Asset> existingAssets = [];
         if (portfolioHasAsset)
-            existingAssets = GetAllAssetsWithSameSymbol(asset.Symbol);
+            existingAssets = GetAllAssetsWithSameSymbol(asset.GetSymbol());
 
-        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqual(a.PaidPrice, paidValue)))
+        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqual(a.GetPaidPrice(), paidValue)))
         {
-            asset = existingAssets.First(a => Helper.NearlyEqual(a.PaidPrice, paidValue));
-            AddQuantityToAsset(asset, quantity);
+            asset = existingAssets.First(a => Helper.NearlyEqual(a.GetPaidPrice(), paidValue));
+            Asset.AddQuantityToAsset(asset, quantity);
             return;
         }
 
         var newAsset = new Asset(
-            asset.Symbol,
-            asset.Name,
-            asset.Type,
-            asset.CurrentPrice,
+            asset.GetSymbol(),
+            asset.GetName(),
+            asset.GetType(),
+            asset.GetCurrentPrice(),
             quantity,
             paidValue,
             purchaseDate
         );
         
         Assets.Add(newAsset);
-    }
-
-    private static void AddQuantityToAsset(Asset portfolioAsset, int quantity)
-    {
-        if (quantity <= 0)
-        {
-            Helper.ShowError("Quantidade deve ser maior que zero.");
-            return;
-        }
-        
-        portfolioAsset.Quantity += quantity;
     }
 
     public void SellAsset(List<Asset> assets, int sellingQuantity = 1)
@@ -208,7 +199,7 @@ public class Portfolio
         if (sellingQuantity < 1)
             throw new ArgumentOutOfRangeException(nameof(sellingQuantity), "Quantity must be greater than zero.");
         
-        var assetsTotalQuantity = assets.Sum(a => a.Quantity);
+        var assetsTotalQuantity = assets.Sum(a => a.GetQuantity());
         
         if (sellingQuantity > assetsTotalQuantity)
             throw new ArgumentOutOfRangeException(
@@ -217,29 +208,29 @@ public class Portfolio
             );
         
         if (assets.Count > 1)
-            assets = assets.OrderByDescending(a => a.ProfitOrLoss).ToList();
+            assets = assets.OrderByDescending(a => a.GetProfitOrLoss()).ToList();
         
         var firstAsset = assets.First();
-        var assetSymbol = firstAsset.Symbol;
-        var assetEarning = Helper.DoubleToCurrency(firstAsset.CurrentPrice * sellingQuantity);
+        var assetSymbol = firstAsset.GetSymbol();
+        var assetEarning = Helper.DoubleToCurrency(firstAsset.GetCurrentPrice() * sellingQuantity);
         var quantitySold = sellingQuantity;
 
         while (sellingQuantity > 0 && assets.Count > 0)
         {
             foreach (var asset in assets)
             {
-                var assetQuantity = asset.Quantity;
+                var assetQuantity = asset.GetQuantity();
 
                 if (assetQuantity >= sellingQuantity)
                 {
                     ReduceAssetQuantity(asset, sellingQuantity);
-                    WalletBalance += asset.CurrentPrice * assetQuantity;
+                    WalletBalance += asset.GetCurrentPrice() * assetQuantity;
                     sellingQuantity = 0;
                     break;
                 }
                 
                 ReduceAssetQuantity(asset, assetQuantity);
-                WalletBalance += asset.CurrentPrice * asset.Quantity;
+                WalletBalance += asset.GetCurrentPrice() * asset.GetQuantity();
                 sellingQuantity -= assetQuantity;
             }
         }
@@ -257,36 +248,36 @@ public class Portfolio
         if (quantity < 1)
             throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be greater than zero.");
         
-        if (!HasAsset(asset.Symbol))
-            throw new InvalidOperationException($"Asset with symbol {asset.Symbol} does not exist in the portfolio.");
+        if (!HasAsset(asset.GetSymbol()))
+            throw new InvalidOperationException($"Asset with symbol {asset.GetSymbol()} does not exist in the portfolio.");
 
-        var existingAsset = GetAssetBySymbol(asset.Symbol);
+        var existingAsset = GetAssetBySymbol(asset.GetSymbol());
         if (existingAsset == null)
-            throw new InvalidOperationException($"No asset found with symbol {asset.Symbol}.");
+            throw new InvalidOperationException($"No asset found with symbol {asset.GetSymbol()}.");
 
-        existingAsset.Quantity -= quantity;
+        Asset.SubtractQuantityFromAsset(existingAsset, quantity);
         
-        if (existingAsset.Quantity <= 0)
+        if (existingAsset.GetQuantity() <= 0)
             Assets.Remove(existingAsset);
     }
 
     private static void PrintAssetDetails(Asset asset)
     {
         AnsiConsole.Markup("\n[bold green]Detalhes do seu Ativo:[/]");
-        AnsiConsole.Markup($"\n\n[bold blue]Ativo:[/] {asset.Symbol}");
-        AnsiConsole.Markup($"\n[bold blue]Nome:[/] {asset.Name}");
-        AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {asset.Type}");
-        AnsiConsole.Markup($"\n[bold blue]Valor de Venda:[/] {Helper.DoubleToCurrency(asset.CurrentPrice)}");
+        AnsiConsole.Markup($"\n\n[bold blue]Ativo:[/] {asset.GetSymbol()}");
+        AnsiConsole.Markup($"\n[bold blue]Nome:[/] {asset.GetName()}");
+        AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {asset.GetType()}");
+        AnsiConsole.Markup($"\n[bold blue]Valor de Venda:[/] {Helper.DoubleToCurrency(asset.GetCurrentPrice())}");
         
-        AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
-        AnsiConsole.Markup($"\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
+        AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.GetPurchaseDate():dd/MM/yyyy}");
+        AnsiConsole.Markup($"\n[bold blue]Data da Compra:[/] {asset.GetPurchaseDate():dd/MM/yyyy}");
         AnsiConsole.Markup(
-            $"\n[bold blue]Valor Pago na Compra:[/] {Helper.DoubleToCurrency(asset.PaidPrice)}");
+            $"\n[bold blue]Valor Pago na Compra:[/] {Helper.DoubleToCurrency(asset.GetPaidPrice())}");
         AnsiConsole.Markup(
             $"\n[bold blue]Lucro/Prejuízo:[/] " +
-            $"{asset.GetProfitOrLossCompleteValue(asset.PaidPrice, asset.CurrentPrice)}");
+            $"{Terminal.GetProfitOrLossCompleteValue(asset)}");
         
-        AnsiConsole.Markup($"\n\n[bold blue]Quantidade:[/] {asset.Quantity}");
+        AnsiConsole.Markup($"\n\n[bold blue]Quantidade:[/] {asset.GetQuantity()}");
     }
     
     public static void PrintSameAssetListDetails(List<Asset> assets)
@@ -304,26 +295,26 @@ public class Portfolio
             default:
                 var firstAsset = assets.First();
                 AnsiConsole.Markup("\n[bold green]Detalhes dos seus Ativos:[/]");
-                AnsiConsole.Markup($"\n\n[bold blue]Ativo:[/] {firstAsset.Symbol}");
-                AnsiConsole.Markup($"\n[bold blue]Nome:[/] {firstAsset.Name}");
-                AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {firstAsset.Type}");
+                AnsiConsole.Markup($"\n\n[bold blue]Ativo:[/] {firstAsset.GetSymbol()}");
+                AnsiConsole.Markup($"\n[bold blue]Nome:[/] {firstAsset.GetName()}");
+                AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {firstAsset.GetType()}");
                 AnsiConsole.Markup(
-                    $"\n[bold blue]Valor de Venda:[/] {Helper.DoubleToCurrency(firstAsset.CurrentPrice)}");
+                    $"\n[bold blue]Valor de Venda:[/] {Helper.DoubleToCurrency(firstAsset.GetCurrentPrice())}");
                 
                 foreach (var asset in assets)
                 {
-                    AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
+                    AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.GetPurchaseDate():dd/MM/yyyy}");
                     AnsiConsole.Markup(
-                        $"\n[bold blue]Valor Pago na Compra:[/] {Helper.DoubleToCurrency(asset.PaidPrice)}");
-                    AnsiConsole.Markup($"\n[bold blue]Quantidade:[/] {asset.Quantity}");
+                        $"\n[bold blue]Valor Pago na Compra:[/] {Helper.DoubleToCurrency(asset.GetPaidPrice())}");
+                    AnsiConsole.Markup($"\n[bold blue]Quantidade:[/] {asset.GetQuantity()}");
                     AnsiConsole.Markup(
                         $"\n[bold blue]Lucro/Prejuízo:[/] " +
-                        $"{asset.GetProfitOrLossCompleteValue(asset.PaidPrice, asset.CurrentPrice)}");
+                        $"{Terminal.GetProfitOrLossCompleteValue(asset)}");
                 }
                 
                 AnsiConsole.Markup(
-                    $"\n\n\n[bold green]Quantidade Total de Ativos[/] [bold blue]{firstAsset.Symbol}[/] " +
-                    $"[bold green]disponíveis para venda:[/] {assets.Sum(a => a.Quantity)}"
+                    $"\n\n\n[bold green]Quantidade Total de Ativos[/] [bold blue]{firstAsset.GetSymbol()}[/] " +
+                    $"[bold green]disponíveis para venda:[/] {assets.Sum(a => a.GetQuantity())}"
                 );
                 break;
         }
@@ -342,7 +333,7 @@ public class Portfolio
             return;
         }
 
-        var assets = Assets.OrderBy(a => a.Symbol);
+        var assets = Assets.OrderBy(a => a.GetSymbol());
         var assetsTable = new Table()
             .Border(TableBorder.HeavyHead)
             .ShowRowSeparators()
@@ -385,7 +376,7 @@ public class Portfolio
                 
                 foreach (var asset in assets)
                 {
-                    asset.AddRowToTable(assetsTable);
+                    Terminal.AddRowToTable(asset, assetsTable);
                     ctx.Refresh();
                     Thread.Sleep(TableDelay);
                 }
@@ -393,4 +384,7 @@ public class Portfolio
         
         AnsiConsole.Console.Profile.Width = defaultConsoleWidth;
     }
+
+    [GeneratedRegex(@"\D")]
+    private static partial Regex AnyNonDigitRegex();
 }

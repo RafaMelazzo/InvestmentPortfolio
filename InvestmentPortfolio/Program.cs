@@ -84,7 +84,7 @@ void BuyAssetInPortfolio()
         return;
     }
     
-    Asset.PrintAssetDetails(asset);
+    Terminal.PrintAssetDetails(asset);
     
     var quantity = AnsiConsole.Prompt(
         new TextPrompt<int>("\n\nQuantas unidades você deseja adicionar? [grey](deixe em branco para 1)[/]: ")
@@ -121,7 +121,7 @@ void SellAssetFromPortfolio()
                 .MoreChoicesText("[grey](Use as setas para cima/baixo para exibir mais opções)[/]")
                 .AddChoices(
                     portfolio.Assets
-                        .Select(a => a.Symbol)
+                        .Select(a => a.GetSymbol())
                         .Distinct()
                         .OrderBy(s => s)
                         .ToList()
@@ -139,7 +139,7 @@ void SellAssetFromPortfolio()
             .Validate(
                 q => q <= 0
                     ? ValidationResult.Error("[red]A quantidade deve ser maior que zero.[/]")
-                    : q > assets.Sum(a => a.Quantity)
+                    : q > assets.Sum(a => a.GetQuantity())
                     ? ValidationResult.Error($"[red]Você não possui[/] [bold blue]{q}[/] [red]unidades deste ativo.[/]")
                     : ValidationResult.Success())
     );
@@ -162,10 +162,10 @@ void AddSampleDataToPortfolio()
     foreach (var asset in sampleAssets)
     {
         var quantity = 1;
-        var paidPrice = asset.CurrentPrice;
+        var paidPrice = asset.GetCurrentPrice();
         var purchaseDate = DateTime.Now;
         
-        switch (asset.Symbol)
+        switch (asset.GetSymbol())
         {
             case "STNE":
                 quantity = 150;

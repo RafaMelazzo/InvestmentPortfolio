@@ -1,5 +1,3 @@
-using Spectre.Console;
-
 namespace InvestmentPortfolio;
 
 public class Asset(
@@ -9,64 +7,63 @@ public class Asset(
     double currentPrice,
     int quantity = 1,
     double paidPrice = 0,
-    DateTime purchaseDate = default
-) {
-    public string Symbol { get; } = symbol;
-    public string Name { get; } = name;
-    public string Type { get; } = type;
-    public double CurrentPrice { get; } = currentPrice;
-    public int Quantity { get; set; } = quantity > 0 ? quantity : 1;
-    public double PaidPrice { get; set; } = paidPrice > 0 ? paidPrice : currentPrice;
-    public DateTime PurchaseDate { get; set; } = purchaseDate == default ? DateTime.Now : purchaseDate;
-    public double ProfitOrLoss => CurrentPrice - PaidPrice;
-
-    private bool IsProfit => CurrentPrice >= PaidPrice;
-
-    private string GetProfitOrLossArrow()
+    DateTime purchaseDate = default)
+{
+    private string Symbol { get; } = symbol;
+    private string Name { get; } = name;
+    private string Type { get; } = type;
+    private double CurrentPrice { get; } = currentPrice;
+    private int Quantity { get; set; } = quantity > 0 ? quantity : 1;
+    private double PaidPrice { get; set; } = paidPrice > 0 ? paidPrice : currentPrice;
+    private DateTime PurchaseDate { get; set; } = purchaseDate == default ? DateTime.Now : purchaseDate;
+    private double ProfitOrLoss => CurrentPrice - PaidPrice;
+    
+    public string GetSymbol() => Symbol.ToUpper();
+    public string GetName() => Name;
+    public new string GetType() => Type.ToUpper();
+    public double GetCurrentPrice() => CurrentPrice;
+    public int GetQuantity() => Quantity;
+    public double GetPaidPrice() => PaidPrice;
+    public DateTime GetPurchaseDate() => PurchaseDate;
+    public double GetProfitOrLoss() => ProfitOrLoss;
+    public bool IsProfit => CurrentPrice >= PaidPrice;
+    
+    public void SetPaidPrice(double price)
     {
-        return ProfitOrLoss > 0 ? "↗ " : ProfitOrLoss < 0 ? "↘ " : "→ ";
+        if (price <= 0)
+        {
+            Helper.ShowError("Valor pago deve ser maior que zero.");
+            return;
+        }
+        
+        PaidPrice = price;
     }
 
-    private string GetProfitOrLossColor()
+    public static void AddQuantityToAsset(Asset asset, int quantity)
     {
-        return ProfitOrLoss > 0 ? "green" : ProfitOrLoss < 0 ? "red" : "silver";
-    }
-
-    public string GetProfitOrLossCompleteValue(double paidValue, double currentValue)
-    {
-        var color = GetProfitOrLossColor();
-        var arrow = GetProfitOrLossArrow();
-        var value = IsProfit
-            ? $"{Helper.DoubleToCurrency(ProfitOrLoss)} "
-            : $"-{Helper.DoubleToCurrency(-ProfitOrLoss)} ";
-        var percentage = IsProfit 
-            ? $"({(Math.Abs(ProfitOrLoss) / paidValue * 100):F2}%)" 
-            : $"(-{(Math.Abs(ProfitOrLoss) / paidValue * 100):F2}%)";
-
-        return $"[{color}]{arrow + value + percentage}[/]";
+        if (quantity <= 0)
+        {
+            Helper.ShowError("Quantidade deve ser maior que zero.");
+            return;
+        }
+        
+        asset.Quantity += quantity;
     }
     
-    public static void PrintAssetDetails(Asset asset)
+    public static void SubtractQuantityFromAsset(Asset asset, int quantity)
     {
-        AnsiConsole.Markup("\n[bold blue]Detalhes do Ativo:[/]");
-        AnsiConsole.Markup($"\n[bold green]Ativo:[/] {asset.Symbol}");
-        AnsiConsole.Markup($"\n[bold green]Nome:[/] {asset.Name}");
-        AnsiConsole.Markup($"\n[bold green]Tipo:[/] {asset.Type}");
-        AnsiConsole.Markup($"\n[bold green]Valor:[/] {Helper.DoubleToCurrency(asset.CurrentPrice)}");
-        Console.WriteLine("\n");
-    }
-
-    public void AddRowToTable(Table table)
-    {
-        table.AddRow(
-            Symbol,
-            Name,
-            Type,
-            Quantity.ToString(),
-            PurchaseDate.ToString("dd/MM/yyyy"),
-            $"{Helper.DoubleToCurrency(PaidPrice)}\n({Helper.DoubleToCurrency(PaidPrice * Quantity)})",
-            $"{Helper.DoubleToCurrency(CurrentPrice)}\n({Helper.DoubleToCurrency(CurrentPrice * Quantity)})",
-            GetProfitOrLossCompleteValue(PaidPrice, CurrentPrice)
-        );
+        if (quantity <= 0)
+        {
+            Helper.ShowError("Quantidade deve ser maior que zero.");
+            return;
+        }
+        
+        if (quantity > asset.Quantity)
+        {
+            Helper.ShowError($"Quantidade a ser subtraída ({quantity}) é maior que a quantidade atual ({asset.Quantity}).");
+            return;
+        }
+        
+        asset.Quantity -= quantity;
     }
 }
