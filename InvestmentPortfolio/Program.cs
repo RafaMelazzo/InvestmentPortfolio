@@ -91,7 +91,7 @@ void BuyAssetInPortfolio()
             .DefaultValue(1)
             .Validate(
                 q => q <= 0
-                    ? ValidationResult.Error("A quantidade deve ser maior que zero.")
+                    ? ValidationResult.Error("[red]A quantidade deve ser maior que zero.[/]")
                     : ValidationResult.Success())
     );
     

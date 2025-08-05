@@ -66,7 +66,7 @@ public abstract class Terminal
     public static void GetBoughtAssetResponse(int quantityAdded, string assetSymbol, string assetsCost)
     {
         AnsiConsole.Markup(
-            $"\nVocê comprou [bold blue]{quantityAdded}[/] unidades do ativo [bold blue]{assetSymbol}[/]" +
+            $"\nVocê comprou [bold blue]{quantityAdded}[/] unidades do ativo [bold blue]{assetSymbol}[/] " +
             $"por [bold green]{assetsCost}[/].");
     }
 
@@ -192,7 +192,7 @@ public abstract class Terminal
                 
                 foreach (var asset in assets)
                 {
-                    Terminal.AddRowToTable(asset, assetsTable);
+                    AddRowToTable(asset, assetsTable);
                     ctx.Refresh();
                     Thread.Sleep(TableDelay);
                 }
