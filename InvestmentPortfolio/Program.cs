@@ -54,8 +54,8 @@ void ViewAssets()
 {
     Console.Clear();
 
-    portfolio.GetInfos();
-    portfolio.GetAssetsTable();
+    Terminal.GetInfos(portfolio);
+    Terminal.GetAssetsTable(portfolio);
     
     Helper.BackToStart();
 }
@@ -64,7 +64,7 @@ void BuyAssetInPortfolio()
 {
     Console.Clear();
 
-    portfolio.GetInfos();
+    Terminal.GetInfos(portfolio);
         
     AnsiConsole.Markup("\n\n[bold orange3]COMPRAR ATIVOS:[/]\n");
     
@@ -84,7 +84,7 @@ void BuyAssetInPortfolio()
         return;
     }
     
-    Terminal.PrintAssetDetails(asset);
+    Terminal.PrintStockAssetDetails(asset);
     
     var quantity = AnsiConsole.Prompt(
         new TextPrompt<int>("\n\nQuantas unidades você deseja adicionar? [grey](deixe em branco para 1)[/]: ")
@@ -104,11 +104,11 @@ void SellAssetFromPortfolio()
 {
     Console.Clear();
 
-    portfolio.GetInfos();
+    Terminal.GetInfos(portfolio);
         
     AnsiConsole.Markup("\n\n[bold orange3]VENDER ATIVOS:[/]\n");
     
-    if (portfolio.Assets.Count == 0)
+    if (portfolio.GetAssetsCount() == 0)
     {
         AnsiConsole.Markup("[bold red]Nenhum ativo encontrado[/]\n");
         return;
@@ -120,7 +120,7 @@ void SellAssetFromPortfolio()
                 .PageSize(10)
                 .MoreChoicesText("[grey](Use as setas para cima/baixo para exibir mais opções)[/]")
                 .AddChoices(
-                    portfolio.Assets
+                    portfolio.GetAssets()
                         .Select(a => a.GetSymbol())
                         .Distinct()
                         .OrderBy(s => s)
@@ -129,7 +129,7 @@ void SellAssetFromPortfolio()
         );
     
     var assets = portfolio.GetAllAssetsWithSameSymbol(assetSymbol);
-    Portfolio.PrintSameAssetListDetails(assets);
+    Terminal.PrintSameAssetListDetails(assets);
 
     Console.WriteLine("\n");
     

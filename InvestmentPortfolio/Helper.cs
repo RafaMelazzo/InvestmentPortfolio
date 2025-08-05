@@ -66,11 +66,11 @@ public static class Helper
     
     public static int? GetDynamicColumnWidth(Table table, int columnId, int cellPadding = 1)
     {
-        int totalWidth = AnsiConsole.Console.Profile.Width;
-        int cellsPadding = cellPadding * 2 * table.Columns.Count;
+        var totalWidth = AnsiConsole.Console.Profile.Width;
+        var cellsPadding = cellPadding * 2 * table.Columns.Count;
         int? columnsWidth = 0;
         
-        for (int i = 0; i < table.Columns.Count; i++)
+        for (var i = 0; i < table.Columns.Count; i++)
         {
             if (i == columnId) continue; // Skip the dynamic column
             columnsWidth += table.Columns[i].Width;

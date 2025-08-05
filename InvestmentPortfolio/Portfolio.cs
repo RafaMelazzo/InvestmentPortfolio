@@ -24,7 +24,7 @@ public partial class Portfolio
             _cpf = $"{cpfNumbers[..3]}.{cpfNumbers[3..6]}.{cpfNumbers[6..9]}-{cpfNumbers[9..11]}";
         }
     }
-    public List<Asset> Assets { get; }
+    private List<Asset> Assets { get; }
     private double WalletBalance
     {
         get => _walletBalance;
@@ -56,19 +56,18 @@ public partial class Portfolio
         WalletBalance = walletBalance;
     }
     
-    private const int TableDelay = 120;
+    public string GetName() => Name;
+    public string GetCpf() => Cpf;
+    public List<Asset> GetAssets() => Assets;
+    public double GetWalletBalance() => WalletBalance;
+    public int GetQuantity() => Quantity;
+    public double GetPaidTotal() => PaidTotal;
+    public double GetAssetsTotalValue() => AssetsTotalValue;
+    public int GetAssetsCount() => Assets.Count;
     
     public string GetFirstName()
     {
         return Name.Split(' ')[0];
-    }
-    
-    public void GetInfos()
-    {
-        AnsiConsole.Markup($"\n[bold blue]Nome:[/] {Name}" +
-                           $"\n[bold blue]CPF:[/] {Cpf}" +
-                           $"\n\n[bold blue]Quantidade de Ativos:[/] {Assets.Count}" +
-                           $"\n[bold blue]Saldo Total de Ativos:[/] {Helper.DoubleToCurrency(AssetsTotalValue)}");
     }
     
     private bool HasAsset(string symbol)
@@ -160,12 +159,12 @@ public partial class Portfolio
         var assetExists = stockMarketAssets.Exists(a => a.GetSymbol() == asset.GetSymbol());
         if (!assetExists)
         {
-            var message = $"Ativo com o símbolo \"{asset.GetSymbol()}\" não encontrado no mercado.";
-            Helper.ShowError(message);
+            Helper.ShowError($"Ativo com o símbolo \"{asset.GetSymbol()}\" não encontrado no mercado.");
             return;
         }
         
         var portfolioHasAsset = HasAsset(asset.GetSymbol());
+        var assetsCost = Helper.DoubleToCurrency(paidValue * quantity);
         
         List<Asset> existingAssets = [];
         if (portfolioHasAsset)
@@ -175,6 +174,7 @@ public partial class Portfolio
         {
             asset = existingAssets.First(a => Helper.NearlyEqual(a.GetPaidPrice(), paidValue));
             Asset.AddQuantityToAsset(asset, quantity);
+            Terminal.GetBoughtAssetResponse(quantity, asset.GetSymbol(), assetsCost);
             return;
         }
 
@@ -189,6 +189,7 @@ public partial class Portfolio
         );
         
         Assets.Add(newAsset);
+        Terminal.GetBoughtAssetResponse(quantity, asset.GetSymbol(), assetsCost);
     }
 
     public void SellAsset(List<Asset> assets, int sellingQuantity = 1)
@@ -235,9 +236,7 @@ public partial class Portfolio
             }
         }
         
-        AnsiConsole.Markup(
-            $"\nVocê vendeu [bold blue]{quantitySold}[/] unidades do ativo [bold blue]{assetSymbol}[/] " +
-            $"por [bold green]{assetEarning}[/].");
+        Terminal.GetSoldAssetResponse(quantitySold, assetSymbol, assetEarning);
     }
     
     private void ReduceAssetQuantity(Asset asset, int quantity)
@@ -259,130 +258,6 @@ public partial class Portfolio
         
         if (existingAsset.GetQuantity() <= 0)
             Assets.Remove(existingAsset);
-    }
-
-    private static void PrintAssetDetails(Asset asset)
-    {
-        AnsiConsole.Markup("\n[bold green]Detalhes do seu Ativo:[/]");
-        AnsiConsole.Markup($"\n\n[bold blue]Ativo:[/] {asset.GetSymbol()}");
-        AnsiConsole.Markup($"\n[bold blue]Nome:[/] {asset.GetName()}");
-        AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {asset.GetType()}");
-        AnsiConsole.Markup($"\n[bold blue]Valor de Venda:[/] {Helper.DoubleToCurrency(asset.GetCurrentPrice())}");
-        
-        AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.GetPurchaseDate():dd/MM/yyyy}");
-        AnsiConsole.Markup($"\n[bold blue]Data da Compra:[/] {asset.GetPurchaseDate():dd/MM/yyyy}");
-        AnsiConsole.Markup(
-            $"\n[bold blue]Valor Pago na Compra:[/] {Helper.DoubleToCurrency(asset.GetPaidPrice())}");
-        AnsiConsole.Markup(
-            $"\n[bold blue]Lucro/Prejuízo:[/] " +
-            $"{Terminal.GetProfitOrLossCompleteValue(asset)}");
-        
-        AnsiConsole.Markup($"\n\n[bold blue]Quantidade:[/] {asset.GetQuantity()}");
-    }
-    
-    public static void PrintSameAssetListDetails(List<Asset> assets)
-    {
-        switch (assets.Count)
-        {
-            case <0:
-                throw new ArgumentException("Asset list cannot be null or empty.", nameof(assets));
-            case 0:
-                Helper.ShowError("Nenhum ativo encontrado.");
-                return;
-            case 1:
-                PrintAssetDetails(assets.First());
-                return;
-            default:
-                var firstAsset = assets.First();
-                AnsiConsole.Markup("\n[bold green]Detalhes dos seus Ativos:[/]");
-                AnsiConsole.Markup($"\n\n[bold blue]Ativo:[/] {firstAsset.GetSymbol()}");
-                AnsiConsole.Markup($"\n[bold blue]Nome:[/] {firstAsset.GetName()}");
-                AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {firstAsset.GetType()}");
-                AnsiConsole.Markup(
-                    $"\n[bold blue]Valor de Venda:[/] {Helper.DoubleToCurrency(firstAsset.GetCurrentPrice())}");
-                
-                foreach (var asset in assets)
-                {
-                    AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.GetPurchaseDate():dd/MM/yyyy}");
-                    AnsiConsole.Markup(
-                        $"\n[bold blue]Valor Pago na Compra:[/] {Helper.DoubleToCurrency(asset.GetPaidPrice())}");
-                    AnsiConsole.Markup($"\n[bold blue]Quantidade:[/] {asset.GetQuantity()}");
-                    AnsiConsole.Markup(
-                        $"\n[bold blue]Lucro/Prejuízo:[/] " +
-                        $"{Terminal.GetProfitOrLossCompleteValue(asset)}");
-                }
-                
-                AnsiConsole.Markup(
-                    $"\n\n\n[bold green]Quantidade Total de Ativos[/] [bold blue]{firstAsset.GetSymbol()}[/] " +
-                    $"[bold green]disponíveis para venda:[/] {assets.Sum(a => a.GetQuantity())}"
-                );
-                break;
-        }
-    }
-
-    public void GetAssetsTable()
-    {
-        var defaultConsoleWidth = AnsiConsole.Console.Profile.Width;
-        AnsiConsole.Console.Profile.Width = 140;
-        
-        AnsiConsole.Markup("\n\n[bold orange3]SUA CARTEIRA DE ATIVOS:[/]\n");
-        
-        if (Assets.Count == 0)
-        {
-            AnsiConsole.Markup("[bold red]Nenhum ativo encontrado[/]\n");
-            return;
-        }
-
-        var assets = Assets.OrderBy(a => a.GetSymbol());
-        var assetsTable = new Table()
-            .Border(TableBorder.HeavyHead)
-            .ShowRowSeparators()
-            .ShowFooters()
-            .Expand();
-        
-        AnsiConsole.Live(assetsTable)
-            .Start(ctx => 
-            {
-                assetsTable.AddColumn("[bold blue]Código[/]");
-                assetsTable.AddColumn("[bold blue]Nome[/]");
-                assetsTable.AddColumn("[bold blue]Tipo[/]");
-                assetsTable.AddColumn("[bold blue]Quantidade[/]");
-                assetsTable.AddColumn("[bold blue]Data da Compra[/]");
-                assetsTable.AddColumn("[bold blue]Valor Pago[/]");
-                assetsTable.AddColumn("[bold blue]Valor Atual[/]");
-                assetsTable.AddColumn("[bold blue]Lucro/Prejuízo[/]");
-        
-                assetsTable.Columns[0]
-                    .Width(6).NoWrap().Footer("[bold blue]TOTAL[/]");
-                assetsTable.Columns[2]
-                    .Width(10).NoWrap();
-                assetsTable.Columns[3]
-                    .Width(6).NoWrap().RightAligned().Footer($"[bold blue]{Quantity}[/]");
-                assetsTable.Columns[4]
-                    .Width(15).NoWrap();
-                assetsTable.Columns[5]
-                    .Width(14).NoWrap().RightAligned()
-                    .Footer($"[bold blue]{Helper.DoubleToCurrency(PaidTotal)}[/]");
-                assetsTable.Columns[6]
-                    .Width(14).NoWrap().RightAligned()
-                    .Footer($"[bold blue]{Helper.DoubleToCurrency(AssetsTotalValue)}[/]");
-                assetsTable.Columns[7]
-                    .Width(28).NoWrap();
-                assetsTable.Columns[1]
-                    .Width(Helper.GetDynamicColumnWidth(assetsTable, 1)).NoWrap();
-                
-                ctx.Refresh();
-                Thread.Sleep(TableDelay);
-                
-                foreach (var asset in assets)
-                {
-                    Terminal.AddRowToTable(asset, assetsTable);
-                    ctx.Refresh();
-                    Thread.Sleep(TableDelay);
-                }
-            });
-        
-        AnsiConsole.Console.Profile.Width = defaultConsoleWidth;
     }
 
     [GeneratedRegex(@"\D")]
