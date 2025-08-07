@@ -5,6 +5,152 @@ namespace InvestmentPortfolio;
 public abstract class Terminal
 {
     private const int TableDelay = 120;
+
+    public static void WelcomeScreen(Portfolio portfolio)
+    {
+        string option;
+        do
+        {
+            Console.Clear();
+            AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
+            AnsiConsole.MarkupLine($"\nBem-vindo, [bold blue]{portfolio.GetFirstName()}[/]!");
+            Console.WriteLine("Para começar, selecione uma das opções abaixo.");
+            
+            AnsiConsole.MarkupLine("\n[bold orange3]OPÇÕES:[/]");
+            AnsiConsole.MarkupLine("[bold blue] 1[/]: Visualizar ativos da minha carteira");
+            AnsiConsole.MarkupLine("[bold blue] 2[/]: Comprar ativos do mercado de ações");
+            AnsiConsole.MarkupLine("[bold blue] 3[/]: Vender ativos da minha carteira");
+            AnsiConsole.MarkupLine("[bold blue]99[/]: Sair");
+
+            Console.Write("\nDigite o número da opção desejada: ");
+            option = Console.ReadLine()!;
+
+            switch (option)
+            {
+                case "1":
+                    ViewAssets(portfolio);
+                    break;
+                case "2":
+                    BuyAssetInPortfolio(portfolio);
+                    break;
+                case "3":
+                    SellAssetFromPortfolio(portfolio);
+                    break;
+                case "99":
+                    ExitProgram();
+                    return;
+                default:
+                    Helper.ShowError($"Opção \"{option}\" inválida.");
+                    break;
+            }
+        } while (option != "99");
+    }
+
+    private static void ViewAssets(Portfolio portfolio)
+    {
+        Console.Clear();
+
+        GetInfos(portfolio);
+        GetAssetsTable(portfolio);
+        
+        Helper.BackToStart();
+    }
+
+    private static void BuyAssetInPortfolio(Portfolio portfolio)
+    {
+        Console.Clear();
+
+        GetInfos(portfolio);
+            
+        AnsiConsole.Markup("\n\n[bold orange3]COMPRAR ATIVOS:[/]\n");
+        
+        var assetSymbol = AnsiConsole.Prompt(
+                new TextPrompt<string>("Digite o símbolo do ativo [grey](ex: STNE, AAPL, GOOGL)[/]: ")
+            ).ToUpper().Trim();
+        if (!StockMarket.AssetExists(assetSymbol))
+        {
+            Helper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado no mercado de ações.");
+            return;
+        }
+        
+        var asset = StockMarket.GetAssetBySymbol(assetSymbol);
+        if (asset == null)
+        {
+            Helper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado.");
+            return;
+        }
+        
+        PrintStockAssetDetails(asset);
+        
+        var quantity = AnsiConsole.Prompt(
+            new TextPrompt<int>("\n\nQuantas unidades você deseja adicionar? [grey](deixe em branco para 1)[/]: ")
+                .DefaultValue(1)
+                .Validate(
+                    q => q <= 0
+                        ? ValidationResult.Error("[red]A quantidade deve ser maior que zero.[/]")
+                        : ValidationResult.Success())
+        );
+        
+        portfolio.AddAsset(asset, quantity);
+        
+        Helper.BackToStart();
+    }
+
+    private static void SellAssetFromPortfolio(Portfolio portfolio)
+    {
+        Console.Clear();
+
+        GetInfos(portfolio);
+            
+        AnsiConsole.Markup("\n\n[bold orange3]VENDER ATIVOS:[/]\n");
+        
+        if (portfolio.GetAssetsCount() == 0)
+        {
+            AnsiConsole.Markup("[bold red]Nenhum ativo encontrado[/]\n");
+            return;
+        }
+        
+        var assetSymbol = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Selecione o ativo que deseja vender:")
+                    .PageSize(10)
+                    .MoreChoicesText("[grey](Use as setas para cima/baixo para exibir mais opções)[/]")
+                    .AddChoices(
+                        portfolio.GetAssets()
+                            .Select(a => a.GetSymbol())
+                            .Distinct()
+                            .OrderBy(s => s)
+                            .ToList()
+                    )
+            );
+        
+        var assets = portfolio.GetAllAssetsWithSameSymbol(assetSymbol);
+        PrintSameAssetListDetails(assets);
+
+        Console.WriteLine("\n");
+        
+        var quantity = AnsiConsole.Prompt(
+            new TextPrompt<int>("Quantas unidades você deseja vender? [grey](deixe em branco para 1)[/]: ")
+                .DefaultValue(1)
+                .Validate(
+                    q => q <= 0
+                        ? ValidationResult.Error("[red]A quantidade deve ser maior que zero.[/]")
+                        : q > assets.Sum(a => a.GetQuantity())
+                        ? ValidationResult.Error($"[red]Você não possui[/] [bold blue]{q}[/] [red]unidades deste ativo.[/]")
+                        : ValidationResult.Success())
+        );
+        
+        portfolio.SellAsset(assets, quantity);
+        
+        Helper.BackToStart();
+    }
+
+    private static void ExitProgram()
+    {
+        Console.Clear();
+        AnsiConsole.MarkupLine("\n[bold orange3]Saindo do sistema...[/]");
+        Console.WriteLine("\nObrigado!");
+    }
     
     private static string GetProfitOrLossArrow(Asset asset)
     {
@@ -29,8 +175,8 @@ public abstract class Terminal
 
         return $"[{color}]{arrow + value + percentage}[/]";
     }
-    
-    public static void PrintStockAssetDetails(Asset asset)
+
+    private static void PrintStockAssetDetails(Asset asset)
     {
         AnsiConsole.Markup("\n[bold blue]Detalhes do Ativo:[/]");
         AnsiConsole.Markup($"\n[bold green]Ativo:[/] {asset.GetSymbol()}");
@@ -53,8 +199,8 @@ public abstract class Terminal
             GetProfitOrLossCompleteValue(asset)
         );
     }
-    
-    public static void GetInfos(Portfolio portfolio)
+
+    private static void GetInfos(Portfolio portfolio)
     {
         AnsiConsole.Markup($"\n[bold blue]Nome:[/] {portfolio.GetName()}" +
                            $"\n[bold blue]CPF:[/] {portfolio.GetCpf()}" +
@@ -95,8 +241,8 @@ public abstract class Terminal
         
         AnsiConsole.Markup($"\n\n[bold blue]Quantidade:[/] {asset.GetQuantity()}");
     }
-    
-    public static void PrintSameAssetListDetails(List<Asset> assets)
+
+    private static void PrintSameAssetListDetails(List<Asset> assets)
     {
         switch (assets.Count)
         {
@@ -136,7 +282,7 @@ public abstract class Terminal
         }
     }
 
-    public static void GetAssetsTable(Portfolio portfolio)
+    private static void GetAssetsTable(Portfolio portfolio)
     {
         var defaultConsoleWidth = AnsiConsole.Console.Profile.Width;
         AnsiConsole.Console.Profile.Width = 140;

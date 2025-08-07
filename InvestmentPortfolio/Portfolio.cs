@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
-using Spectre.Console;
 
 namespace InvestmentPortfolio;
 
