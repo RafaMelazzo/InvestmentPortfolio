@@ -40,7 +40,7 @@ public abstract class Terminal
                     ExitProgram();
                     return;
                 default:
-                    Helper.ShowError($"Opção \"{option}\" inválida.");
+                    TerminalHelper.ShowError($"Opção \"{option}\" inválida.");
                     break;
             }
         } while (option != "99");
@@ -53,7 +53,7 @@ public abstract class Terminal
         GetInfos(portfolio);
         GetAssetsTable(portfolio);
         
-        Helper.BackToStart();
+        TerminalHelper.BackToStart();
     }
 
     private static void BuyAssetInPortfolio(Portfolio portfolio)
@@ -69,14 +69,14 @@ public abstract class Terminal
             ).ToUpper().Trim();
         if (!StockMarket.AssetExists(assetSymbol))
         {
-            Helper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado no mercado de ações.");
+            TerminalHelper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado no mercado de ações.");
             return;
         }
         
         var asset = StockMarket.GetAssetBySymbol(assetSymbol);
         if (asset == null)
         {
-            Helper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado.");
+            TerminalHelper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado.");
             return;
         }
         
@@ -93,7 +93,7 @@ public abstract class Terminal
         
         portfolio.AddAsset(asset, quantity);
         
-        Helper.BackToStart();
+        TerminalHelper.BackToStart();
     }
 
     private static void SellAssetFromPortfolio(Portfolio portfolio)
@@ -142,7 +142,7 @@ public abstract class Terminal
         
         portfolio.SellAsset(assets, quantity);
         
-        Helper.BackToStart();
+        TerminalHelper.BackToStart();
     }
 
     private static void ExitProgram()
@@ -249,7 +249,7 @@ public abstract class Terminal
             case <0:
                 throw new ArgumentException("Asset list cannot be null or empty.", nameof(assets));
             case 0:
-                Helper.ShowError("Nenhum ativo encontrado.");
+                TerminalHelper.ShowError("Nenhum ativo encontrado.");
                 return;
             case 1:
                 PrintPortfolioAssetDetails(assets.First());

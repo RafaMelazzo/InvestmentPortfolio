@@ -158,7 +158,7 @@ public partial class Portfolio
         var assetExists = stockMarketAssets.Exists(a => a.GetSymbol() == asset.GetSymbol());
         if (!assetExists)
         {
-            Helper.ShowError($"Ativo com o símbolo \"{asset.GetSymbol()}\" não encontrado no mercado.");
+            TerminalHelper.ShowError($"Ativo com o símbolo \"{asset.GetSymbol()}\" não encontrado no mercado.");
             return;
         }
         

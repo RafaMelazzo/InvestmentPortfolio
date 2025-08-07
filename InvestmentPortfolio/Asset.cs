@@ -32,7 +32,7 @@ public class Asset(
     {
         if (price <= 0)
         {
-            Helper.ShowError("Valor pago deve ser maior que zero.");
+            TerminalHelper.ShowError("Valor pago deve ser maior que zero.");
             return;
         }
         
@@ -43,7 +43,7 @@ public class Asset(
     {
         if (quantity <= 0)
         {
-            Helper.ShowError("Quantidade deve ser maior que zero.");
+            TerminalHelper.ShowError("Quantidade deve ser maior que zero.");
             return;
         }
         
@@ -54,13 +54,13 @@ public class Asset(
     {
         if (quantity <= 0)
         {
-            Helper.ShowError("Quantidade deve ser maior que zero.");
+            TerminalHelper.ShowError("Quantidade deve ser maior que zero.");
             return;
         }
         
         if (quantity > asset.Quantity)
         {
-            Helper.ShowError($"Quantidade a ser subtraída ({quantity}) é maior que a quantidade atual ({asset.Quantity}).");
+            TerminalHelper.ShowError($"Quantidade a ser subtraída ({quantity}) é maior que a quantidade atual ({asset.Quantity}).");
             return;
         }
         
