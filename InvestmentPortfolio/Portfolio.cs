@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace InvestmentPortfolio;
@@ -87,12 +88,8 @@ public partial class Portfolio
             a => a.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase)
                       && Helper.NearlyEqual(a.GetCurrentPrice(), paidValue)
         );
-
-        if (asset == null)
-            return null;
         
-        asset.SetPaidPrice(paidValue);
-        return asset;
+        return asset ?? null;
     }
 
     public List<Asset> GetAllAssetsWithSameSymbol(string symbol)
@@ -172,7 +169,17 @@ public partial class Portfolio
         if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqual(a.GetPaidPrice(), paidValue)))
         {
             asset = existingAssets.First(a => Helper.NearlyEqual(a.GetPaidPrice(), paidValue));
-            Asset.AddQuantityToAsset(asset, quantity);
+            
+            try
+            {
+                Asset.AddQuantityToAsset(asset, quantity);
+            }
+            catch (Exception e)
+            {
+                TerminalHelper.ShowError(e.Message);
+                throw;
+            }
+            
             Terminal.GetBoughtAssetResponse(quantity, asset.GetSymbol(), assetsCost);
             return;
         }
@@ -253,7 +260,15 @@ public partial class Portfolio
         if (existingAsset == null)
             throw new InvalidOperationException($"No asset found with symbol {asset.GetSymbol()}.");
 
-        Asset.SubtractQuantityFromAsset(existingAsset, quantity);
+        try
+        {
+            Asset.SubtractQuantityFromAsset(existingAsset, quantity);
+        }
+        catch (Exception e)
+        {
+            TerminalHelper.ShowError(e.Message);
+            throw;
+        }
         
         if (existingAsset.GetQuantity() <= 0)
             Assets.Remove(existingAsset);

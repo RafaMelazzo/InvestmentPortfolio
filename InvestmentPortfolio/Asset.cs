@@ -14,37 +14,25 @@ public class Asset(
     private string Type { get; } = type;
     private double CurrentPrice { get; } = currentPrice;
     private int Quantity { get; set; } = quantity > 0 ? quantity : 1;
-    private double PaidPrice { get; set; } = paidPrice > 0 ? paidPrice : currentPrice;
-    private DateTime PurchaseDate { get; set; } = purchaseDate == default ? DateTime.Now : purchaseDate;
+    private double PaidPrice { get; } = paidPrice > 0 ? paidPrice : currentPrice;
+    private DateTime PurchaseDate { get; } = purchaseDate == default ? DateTime.Now : purchaseDate;
     private double ProfitOrLoss => CurrentPrice - PaidPrice;
     
     public string GetSymbol() => Symbol.ToUpper();
     public string GetName() => Name;
-    public new string GetType() => Type.ToUpper();
+    public new string GetType() => Type;
     public double GetCurrentPrice() => CurrentPrice;
     public int GetQuantity() => Quantity;
     public double GetPaidPrice() => PaidPrice;
     public DateTime GetPurchaseDate() => PurchaseDate;
     public double GetProfitOrLoss() => ProfitOrLoss;
     public bool IsProfit => CurrentPrice >= PaidPrice;
-    
-    public void SetPaidPrice(double price)
-    {
-        if (price <= 0)
-        {
-            TerminalHelper.ShowError("Valor pago deve ser maior que zero.");
-            return;
-        }
-        
-        PaidPrice = price;
-    }
 
     public static void AddQuantityToAsset(Asset asset, int quantity)
     {
         if (quantity <= 0)
         {
-            TerminalHelper.ShowError("Quantidade deve ser maior que zero.");
-            return;
+            throw new ArgumentException("Quantidade deve ser maior que zero.", nameof(quantity));
         }
         
         asset.Quantity += quantity;
@@ -54,14 +42,15 @@ public class Asset(
     {
         if (quantity <= 0)
         {
-            TerminalHelper.ShowError("Quantidade deve ser maior que zero.");
-            return;
+            throw new ArgumentException("Quantidade deve ser maior que zero.", nameof(quantity));
         }
         
         if (quantity > asset.Quantity)
         {
-            TerminalHelper.ShowError($"Quantidade a ser subtraída ({quantity}) é maior que a quantidade atual ({asset.Quantity}).");
-            return;
+            throw new ArgumentOutOfRangeException(
+                nameof(quantity),
+                "Quantidade a ser subtraída não pode ser maior que a quantidade atual do ativo."
+            );
         }
         
         asset.Quantity -= quantity;
