@@ -5,7 +5,7 @@ namespace InvestmentPortfolio;
 public partial class Portfolio(
     string name,
     string cpf,
-    List<Asset>? assets = null,
+    List<Asset> assets = null!,
     double walletBalance = 0)
 {
     private readonly string _cpf;
@@ -17,26 +17,22 @@ public partial class Portfolio(
         private init => InitCpf(value);
     }
     public List<Asset> Assets { get; private set; } = assets ?? [];
-    public double WalletBalance
+    private double WalletBalance
     {
         get => _walletBalance;
-        private set
+        set
         {
             if (value < 0)
                 throw new ValidationException("Wallet balance cannot be negative.");
             _walletBalance = value;
         }
     }
+    
+    public string GetFirstName() => Name.Split(' ')[0];
+    public int GetAssetsTotalQuantity() => Assets.Sum(a => a.Quantity);
+    public double GetAssetsTotalPaidValue() => Assets.Sum(a => a.PaidPrice * a.Quantity);
+    public double GetAssetsTotalValue() => Assets.Sum(a => a.CurrentPrice * a.Quantity);
 
-    public int AssetsTotalQuantity { get; } = assets!.Sum(a => a.Quantity);
-    public double AssetsPaidTotal { get; } = assets!.Sum(a => a.PaidPrice * a.Quantity);
-    public double AssetsTotalValue { get; } = assets!.Sum(a => a.CurrentPrice * a.Quantity);
-    
-    public string GetFirstName()
-    {
-        return Name.Split(' ')[0];
-    }
-    
     internal bool HasAsset(string symbol)
     {
         return Assets.Any(a => a.Symbol.Equals(symbol));

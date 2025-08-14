@@ -206,7 +206,7 @@ public abstract class Terminal
                            $"\n[bold blue]CPF:[/] {portfolio.Cpf}" +
                            $"\n\n[bold blue]Quantidade de Ativos:[/] {portfolio.Assets.Count}" +
                            "\n[bold blue]Saldo Total de Ativos:[/] " +
-                           $"{Helper.DoubleToCurrency(portfolio.AssetsTotalValue)}");
+                           $"{Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}");
     }
     
     public static void GetBoughtAssetResponse(int quantityAdded, string assetSymbol, string assetsCost)
@@ -319,15 +319,15 @@ public abstract class Terminal
                 assetsTable.Columns[2]
                     .Width(10).NoWrap();
                 assetsTable.Columns[3]
-                    .Width(6).NoWrap().RightAligned().Footer($"[bold blue]{portfolio.AssetsTotalQuantity}[/]");
+                    .Width(6).NoWrap().RightAligned().Footer($"[bold blue]{portfolio.GetAssetsTotalQuantity()}[/]");
                 assetsTable.Columns[4]
                     .Width(15).NoWrap();
                 assetsTable.Columns[5]
                     .Width(14).NoWrap().RightAligned()
-                    .Footer($"[bold blue]{Helper.DoubleToCurrency(portfolio.AssetsPaidTotal)}[/]");
+                    .Footer($"[bold blue]{Helper.DoubleToCurrency(portfolio.GetAssetsTotalPaidValue())}[/]");
                 assetsTable.Columns[6]
                     .Width(14).NoWrap().RightAligned()
-                    .Footer($"[bold blue]{Helper.DoubleToCurrency(portfolio.AssetsTotalValue)}[/]");
+                    .Footer($"[bold blue]{Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}[/]");
                 assetsTable.Columns[7]
                     .Width(28).NoWrap();
                 assetsTable.Columns[1]
