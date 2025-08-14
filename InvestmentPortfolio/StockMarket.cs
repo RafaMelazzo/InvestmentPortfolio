@@ -87,12 +87,15 @@ public abstract class StockMarket
     
     public static bool AssetExists(string symbol)
     {
+        if (string.IsNullOrWhiteSpace(symbol))
+            throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
+        
         var assets = GetAllAssets();
-        return assets.Any(a => a.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        return assets.Any(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
     }
     
     public static Asset? GetAssetBySymbol(string symbol)
     {
-        return Assets?.FirstOrDefault(asset => asset.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        return Assets?.FirstOrDefault(asset => asset.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
     }
 }

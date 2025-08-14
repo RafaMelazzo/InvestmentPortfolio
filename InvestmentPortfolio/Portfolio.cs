@@ -1,92 +1,59 @@
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace InvestmentPortfolio;
 
-public partial class Portfolio
+public partial class Portfolio(
+    string name,
+    string cpf,
+    List<Asset>? assets = null,
+    double walletBalance = 0)
 {
     private readonly string _cpf;
     private double _walletBalance;
-    private string Name { get; }
-    private string Cpf
+    public string Name { get; } = name;
+    public string Cpf
     {
         get => _cpf;
-        init
-        {
-            var cpfNumbers = AnyNonDigitRegex().Replace(value, "");
-
-            if (cpfNumbers.Length != 11)
-            {
-                throw new ValidationException("CPF deve conter 11 números");
-            }
-            
-            _cpf = $"{cpfNumbers[..3]}.{cpfNumbers[3..6]}.{cpfNumbers[6..9]}-{cpfNumbers[9..11]}";
-        }
+        private init => InitCpf(value);
     }
-    private List<Asset> Assets { get; }
-    private double WalletBalance
+    public List<Asset> Assets { get; private set; } = assets ?? [];
+    public double WalletBalance
     {
         get => _walletBalance;
-        set
+        private set
         {
             if (value < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), "Wallet balance cannot be negative.");
-            }
-            
-            if (double.IsNaN(value) || double.IsInfinity(value))
-            {
-                throw new ArgumentException("Wallet balance must be a valid number.", nameof(value));
-            }
-            
+                throw new ValidationException("Wallet balance cannot be negative.");
             _walletBalance = value;
         }
     }
-    private int Quantity => Assets.Sum(asset => asset.GetQuantity());
-    private double PaidTotal => Assets.Sum(asset => asset.GetPaidPrice() * asset.GetQuantity());
-    private double AssetsTotalValue => Assets.Sum(asset => asset.GetCurrentPrice() * asset.GetQuantity());
-    
-    public Portfolio(string name, string cpf, List<Asset>? assets = null, double walletBalance = 0)
-    {
-        Name = name;
-        _cpf = cpf;
-        Cpf = cpf;
-        Assets = assets ?? new List<Asset>();
-        WalletBalance = walletBalance;
-    }
-    
-    public string GetName() => Name;
-    public string GetCpf() => Cpf;
-    public List<Asset> GetAssets() => Assets;
-    public double GetWalletBalance() => WalletBalance;
-    public int GetQuantity() => Quantity;
-    public double GetPaidTotal() => PaidTotal;
-    public double GetAssetsTotalValue() => AssetsTotalValue;
-    public int GetAssetsCount() => Assets.Count;
+
+    public int AssetsTotalQuantity { get; } = assets!.Sum(a => a.Quantity);
+    public double AssetsPaidTotal { get; } = assets!.Sum(a => a.PaidPrice * a.Quantity);
+    public double AssetsTotalValue { get; } = assets!.Sum(a => a.CurrentPrice * a.Quantity);
     
     public string GetFirstName()
     {
         return Name.Split(' ')[0];
     }
     
-    private bool HasAsset(string symbol)
+    internal bool HasAsset(string symbol)
     {
-        return Assets.Any(a => a.GetSymbol().Equals(symbol));
+        return Assets.Any(a => a.Symbol.Equals(symbol));
     }
 
-    private Asset? GetAssetBySymbol(string symbol, double paidValue = 0)
+    internal Asset? GetAssetBySymbol(string symbol, double paidValue = 0)
     {
         if (string.IsNullOrWhiteSpace(symbol))
             throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
 
         if (paidValue <= 0)
-            return Assets.FirstOrDefault(a => a.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase))
+            return Assets.FirstOrDefault(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase))
                    ?? null;
         
         var asset = Assets.FirstOrDefault(
-            a => a.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase)
-                      && Helper.NearlyEqual(a.GetCurrentPrice(), paidValue)
+            a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)
+                      && Helper.NearlyEqual(a.PaidPrice, paidValue)
         );
         
         return asset ?? null;
@@ -97,40 +64,7 @@ public partial class Portfolio
         if (string.IsNullOrWhiteSpace(symbol))
             throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
 
-        return Assets.FindAll(a => a.GetSymbol().Equals(symbol, StringComparison.OrdinalIgnoreCase));
-    }
-
-    public Asset CombineAssetsWithSameSymbol(string symbol)
-    {
-        if (string.IsNullOrWhiteSpace(symbol))
-            throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
-
-        var existingAssets = GetAllAssetsWithSameSymbol(symbol);
-        
-        switch (existingAssets.Count)
-        {
-            case 0:
-                throw new InvalidOperationException($"No assets found with symbol: {symbol}");
-            case 1:
-                return existingAssets.First();
-            default:
-            {
-                var combinedAsset = existingAssets
-                    .GroupBy(a => a.GetSymbol())
-                    .Select(group => new Asset(
-                        group.Key,
-                        group.First().GetName(),
-                        group.First().GetType(),
-                        group.First().GetCurrentPrice(),
-                        group.Sum(a => a.GetQuantity()),
-                        group.First().GetPaidPrice(),
-                        group.First().GetPurchaseDate()))
-                    .FirstOrDefault();
-
-                return combinedAsset
-                       ?? throw new InvalidOperationException($"Failed to combine assets with symbol: {symbol}");
-            }
-        }
+        return Assets.FindAll(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
     }
 
     public void AddAsset(Asset asset, int quantity = 1, double paidValue = 0, DateTime purchaseDate = default)
@@ -144,7 +78,7 @@ public partial class Portfolio
         paidValue = paidValue switch
         {
             < 0 => throw new ArgumentOutOfRangeException(nameof(paidValue), "Paid value cannot be negative."),
-            0   => asset.GetCurrentPrice(),
+            0   => asset.CurrentPrice,
             _   => paidValue
         };
         
@@ -152,23 +86,23 @@ public partial class Portfolio
             purchaseDate = DateTime.Today;
 
         var stockMarketAssets = StockMarket.GetAllAssets();
-        var assetExists = stockMarketAssets.Exists(a => a.GetSymbol() == asset.GetSymbol());
+        var assetExists = stockMarketAssets.Exists(a => a.Symbol == asset.Symbol);
         if (!assetExists)
         {
-            TerminalHelper.ShowError($"Ativo com o símbolo \"{asset.GetSymbol()}\" não encontrado no mercado.");
+            TerminalHelper.ShowError($"Ativo com o símbolo \"{asset.Symbol}\" não encontrado no mercado.");
             return;
         }
         
-        var portfolioHasAsset = HasAsset(asset.GetSymbol());
+        var portfolioHasAsset = HasAsset(asset.Symbol);
         var assetsCost = Helper.DoubleToCurrency(paidValue * quantity);
         
         List<Asset> existingAssets = [];
         if (portfolioHasAsset)
-            existingAssets = GetAllAssetsWithSameSymbol(asset.GetSymbol());
+            existingAssets = GetAllAssetsWithSameSymbol(asset.Symbol);
 
-        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqual(a.GetPaidPrice(), paidValue)))
+        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqual(a.PaidPrice, paidValue)))
         {
-            asset = existingAssets.First(a => Helper.NearlyEqual(a.GetPaidPrice(), paidValue));
+            asset = existingAssets.First(a => Helper.NearlyEqual(a.PaidPrice, paidValue));
             
             try
             {
@@ -180,22 +114,22 @@ public partial class Portfolio
                 throw;
             }
             
-            Terminal.GetBoughtAssetResponse(quantity, asset.GetSymbol(), assetsCost);
+            Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
             return;
         }
 
         var newAsset = new Asset(
-            asset.GetSymbol(),
-            asset.GetName(),
-            asset.GetType(),
-            asset.GetCurrentPrice(),
+            asset.Symbol,
+            asset.Name,
+            asset.Type,
+            asset.CurrentPrice,
             quantity,
             paidValue,
             purchaseDate
         );
         
         Assets.Add(newAsset);
-        Terminal.GetBoughtAssetResponse(quantity, asset.GetSymbol(), assetsCost);
+        Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
     }
 
     public void SellAsset(List<Asset> assets, int sellingQuantity = 1)
@@ -206,7 +140,7 @@ public partial class Portfolio
         if (sellingQuantity < 1)
             throw new ArgumentOutOfRangeException(nameof(sellingQuantity), "Quantity must be greater than zero.");
         
-        var assetsTotalQuantity = assets.Sum(a => a.GetQuantity());
+        var assetsTotalQuantity = assets.Sum(a => a.Quantity);
         
         if (sellingQuantity > assetsTotalQuantity)
             throw new ArgumentOutOfRangeException(
@@ -215,29 +149,29 @@ public partial class Portfolio
             );
         
         if (assets.Count > 1)
-            assets = assets.OrderByDescending(a => a.GetProfitOrLoss()).ToList();
+            assets = assets.OrderByDescending(a => a.ProfitOrLoss).ToList();
         
         var firstAsset = assets.First();
-        var assetSymbol = firstAsset.GetSymbol();
-        var assetEarning = Helper.DoubleToCurrency(firstAsset.GetCurrentPrice() * sellingQuantity);
+        var assetSymbol = firstAsset.Symbol;
+        var assetEarning = Helper.DoubleToCurrency(firstAsset.CurrentPrice * sellingQuantity);
         var quantitySold = sellingQuantity;
 
         while (sellingQuantity > 0 && assets.Count > 0)
         {
             foreach (var asset in assets)
             {
-                var assetQuantity = asset.GetQuantity();
+                var assetQuantity = asset.Quantity;
 
                 if (assetQuantity >= sellingQuantity)
                 {
                     ReduceAssetQuantity(asset, sellingQuantity);
-                    WalletBalance += asset.GetCurrentPrice() * assetQuantity;
+                    WalletBalance += asset.CurrentPrice * assetQuantity;
                     sellingQuantity = 0;
                     break;
                 }
                 
                 ReduceAssetQuantity(asset, assetQuantity);
-                WalletBalance += asset.GetCurrentPrice() * asset.GetQuantity();
+                WalletBalance += asset.CurrentPrice * asset.Quantity;
                 sellingQuantity -= assetQuantity;
             }
         }
@@ -253,25 +187,40 @@ public partial class Portfolio
         if (quantity < 1)
             throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be greater than zero.");
         
-        if (!HasAsset(asset.GetSymbol()))
-            throw new InvalidOperationException($"Asset with symbol {asset.GetSymbol()} does not exist in the portfolio.");
+        if (!HasAsset(asset.Symbol))
+            throw new InvalidOperationException($"Asset with symbol {asset.Symbol} does not exist in the portfolio.");
 
-        var existingAsset = GetAssetBySymbol(asset.GetSymbol());
+        var existingAsset = GetAssetBySymbol(asset.Symbol);
         if (existingAsset == null)
-            throw new InvalidOperationException($"No asset found with symbol {asset.GetSymbol()}.");
+            throw new InvalidOperationException($"No asset found with symbol {asset.Symbol}.");
 
         try
         {
             Asset.SubtractQuantityFromAsset(existingAsset, quantity);
         }
-        catch (Exception e)
+        catch (PortfolioException e)
         {
             TerminalHelper.ShowError(e.Message);
-            throw;
+        }
+        catch (Exception)
+        {
+            TerminalHelper.ShowError("Ocorreu um erro inesperado ao reduzir a quantidade do ativo.");
         }
         
-        if (existingAsset.GetQuantity() <= 0)
+        if (existingAsset.Quantity <= 0)
             Assets.Remove(existingAsset);
+    }
+    
+    private static string InitCpf(string cpf)
+    {
+        if (string.IsNullOrWhiteSpace(cpf))
+            throw new ValidationException("CPF não pode ser nulo ou vazio.");
+
+        var cpfNumbers = AnyNonDigitRegex().Replace(cpf, "");
+        if (cpfNumbers.Length != 11)
+            throw new ValidationException("CPF deve conter exatamente 11 dígitos.");
+        
+        return $"{cpfNumbers[..3]}.{cpfNumbers[3..6]}.{cpfNumbers[6..9]}-{cpfNumbers[9..11]}";
     }
 
     [GeneratedRegex(@"\D")]

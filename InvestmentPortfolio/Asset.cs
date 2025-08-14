@@ -9,48 +9,45 @@ public class Asset(
     double paidPrice = 0,
     DateTime purchaseDate = default)
 {
-    private string Symbol { get; } = symbol;
-    private string Name { get; } = name;
-    private string Type { get; } = type;
-    private double CurrentPrice { get; } = currentPrice;
-    private int Quantity { get; set; } = quantity > 0 ? quantity : 1;
-    private double PaidPrice { get; } = paidPrice > 0 ? paidPrice : currentPrice;
-    private DateTime PurchaseDate { get; } = purchaseDate == default ? DateTime.Now : purchaseDate;
-    private double ProfitOrLoss => CurrentPrice - PaidPrice;
-    
-    public string GetSymbol() => Symbol.ToUpper();
-    public string GetName() => Name;
-    public new string GetType() => Type;
-    public double GetCurrentPrice() => CurrentPrice;
-    public int GetQuantity() => Quantity;
-    public double GetPaidPrice() => PaidPrice;
-    public DateTime GetPurchaseDate() => PurchaseDate;
-    public double GetProfitOrLoss() => ProfitOrLoss;
-    public bool IsProfit => CurrentPrice >= PaidPrice;
+    public string Symbol { get; } = symbol.ToUpper();
+    public string Name { get; } = name;
+    public string Type { get; } = type;
+    public double CurrentPrice { get; } = currentPrice;
+    public int Quantity { get; private set; } = quantity > 0 ? quantity : 1;
+    public double PaidPrice { get; } = paidPrice > 0 ? paidPrice : currentPrice;
+    public DateTime PurchaseDate { get; } = purchaseDate == default ? DateTime.Now : purchaseDate;
+    public double ProfitOrLoss { get; } = currentPrice - paidPrice;
+    public bool IsProfit { get; } = currentPrice > paidPrice;
 
     public static void AddQuantityToAsset(Asset asset, int quantity)
     {
         if (quantity <= 0)
         {
-            throw new ArgumentException("Quantidade deve ser maior que zero.", nameof(quantity));
+            throw new ValidationException("Quantidade deve ser maior que zero.");
         }
         
         asset.Quantity += quantity;
     }
     
+    /*
+     * <summary>Subtract the specified quantity from the asset's current quantity.</summary>
+     * 
+     * <param name="asset">The asset from which to subtract the quantity.</param>
+     * <param name="quantity">The quantity to subtract.</param>
+     *
+     * <exception cref="ValidationException">Thrown when the quantity to subtract is less than or equal to zero,
+     * or greater than the asset's current quantity.</exception>
+     */
     public static void SubtractQuantityFromAsset(Asset asset, int quantity)
     {
         if (quantity <= 0)
         {
-            throw new ArgumentException("Quantidade deve ser maior que zero.", nameof(quantity));
+            throw new ValidationException("Quantidade deve ser maior que zero.");
         }
         
         if (quantity > asset.Quantity)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(quantity),
-                "Quantidade a ser subtraída não pode ser maior que a quantidade atual do ativo."
-            );
+            throw new ValidationException("Quantidade a ser subtraída não pode ser maior que a quantidade atual do ativo.");
         }
         
         asset.Quantity -= quantity;

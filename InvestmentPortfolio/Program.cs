@@ -15,10 +15,10 @@ void AddSampleDataToPortfolio()
     foreach (var asset in sampleAssets)
     {
         var quantity = 1;
-        var paidPrice = asset.GetCurrentPrice();
+        var paidPrice = asset.CurrentPrice;
         var purchaseDate = DateTime.Now;
         
-        switch (asset.GetSymbol())
+        switch (asset.Symbol)
         {
             case "STNE":
                 quantity = 150;
