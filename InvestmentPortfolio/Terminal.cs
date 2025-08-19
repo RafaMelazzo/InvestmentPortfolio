@@ -154,24 +154,24 @@ public abstract class Terminal
     
     private static string GetProfitOrLossArrow(Asset asset)
     {
-        return asset.ProfitOrLoss > 0 ? "↗ " : asset.ProfitOrLoss < 0 ? "↘ " : "→ ";
+        return asset.GetProfitOrLoss() > 0 ? "↗ " : asset.GetProfitOrLoss() < 0 ? "↘ " : "→ ";
     }
 
     private static string GetProfitOrLossColor(Asset asset)
     {
-        return asset.ProfitOrLoss > 0 ? "green" : asset.ProfitOrLoss < 0 ? "red" : "silver";
+        return asset.GetProfitOrLoss() > 0 ? "green" : asset.GetProfitOrLoss() < 0 ? "red" : "silver";
     }
 
     private static string GetProfitOrLossCompleteValue(Asset asset)
     {
         var color = GetProfitOrLossColor(asset);
         var arrow = GetProfitOrLossArrow(asset);
-        var value = asset.IsProfit
-            ? $"{Helper.DoubleToCurrency(asset.ProfitOrLoss)} "
-            : $"-{Helper.DoubleToCurrency(-asset.ProfitOrLoss)} ";
-        var percentage = asset.IsProfit 
-            ? $"({(Math.Abs(asset.ProfitOrLoss) / asset.PaidPrice * 100):F2}%)" 
-            : $"(-{(Math.Abs(asset.ProfitOrLoss) / asset.PaidPrice * 100):F2}%)";
+        var value = asset.IsProfit()
+            ? $"{Helper.DoubleToCurrency(asset.GetProfitOrLoss())} "
+            : $"-{Helper.DoubleToCurrency(-asset.GetProfitOrLoss())} ";
+        var percentage = asset.IsProfit() 
+            ? $"({(Math.Abs(asset.GetProfitOrLoss()) / asset.PaidPrice * 100):F2}%)" 
+            : $"(-{(Math.Abs(asset.GetProfitOrLoss()) / asset.PaidPrice * 100):F2}%)";
 
         return $"[{color}]{arrow + value + percentage}[/]";
     }

@@ -26,7 +26,7 @@ public class PortfolioTests
             new("TEST1", "Test Asset 1", "Ação", 100.0, 10, 50.0, new DateTime(2021, 1, 1)),
             new("TEST2", "Test Asset 2", "Ação", 200.0, 5, 150.0, new DateTime(2022, 2, 2))
         };
-        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", mockAssets);
+        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", 0, mockAssets);
 
         // Act
         var existingAsset1 = portfolio.HasAsset("TEST1");
@@ -50,7 +50,7 @@ public class PortfolioTests
             new("TEST1", "Test Asset 1", "Ação", 100.0, 10, 50.0, new DateTime(2021, 1, 1)),
             new("TEST2", "Test Asset 2", "Ação", 200.0, 5, 150.0, new DateTime(2022, 2, 2))
         };
-        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", mockAssets);
+        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", 0, mockAssets);
 
         // Act
         var asset = portfolio.GetAssetBySymbol(assetSymbol, expectedPrice);
@@ -73,7 +73,7 @@ public class PortfolioTests
             new("TEST1", "Test Asset 1", "Ação", 100.0, 10, 50.0, new DateTime(2021, 1, 1)),
             new("TEST2", "Test Asset 2", "Ação", 200.0, 5, 150.0, new DateTime(2022, 2, 2))
         };
-        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", mockAssets);
+        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", 0, mockAssets);
 
         // Act
         var asset = portfolio.GetAssetBySymbol(assetSymbol, expectedPrice);
@@ -91,7 +91,7 @@ public class PortfolioTests
             new("TEST1", "Test Asset 1", "Ação", 100.0, 10, 50.0, new DateTime(2021, 1, 1)),
             new("TEST2", "Test Asset 2", "Ação", 200.0, 5, 150.0, new DateTime(2022, 2, 2))
         };
-        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", mockAssets);
+        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", 0, mockAssets);
         
         // Act
         void NullAction() => portfolio.GetAssetBySymbol(null!);
@@ -112,7 +112,7 @@ public class PortfolioTests
             new("TEST", "Test Asset 2", "Ação", 200.0, 5, 150.0, new DateTime(2022, 2, 2)),
             new("OTHER", "Other Asset", "Ação", 300.0, 3, 250.0, new DateTime(2023, 3, 3))
         };
-        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", mockAssets);
+        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", 0, mockAssets);
 
         // Act
         var assets = portfolio.GetAllAssetsWithSameSymbol("TEST");
@@ -131,7 +131,7 @@ public class PortfolioTests
             new("TEST1", "Test Asset 1", "Ação", 100.0, 10, 50.0, new DateTime(2021, 1, 1)),
             new("TEST2", "Test Asset 2", "Ação", 200.0, 5, 150.0, new DateTime(2022, 2, 2))
         };
-        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", mockAssets);
+        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", 0, mockAssets);
 
         // Act
         var assets = portfolio.GetAllAssetsWithSameSymbol("INEXISTENT");
@@ -149,7 +149,7 @@ public class PortfolioTests
             new("TEST1", "Test Asset 1", "Ação", 100.0, 10, 50.0, new DateTime(2021, 1, 1)),
             new("TEST2", "Test Asset 2", "Ação", 200.0, 5, 150.0, new DateTime(2022, 2, 2))
         };
-        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", mockAssets);
+        var portfolio = new Portfolio("Test Portfolio", "123.456.789-00", 0, mockAssets);
         
         // Act
         void NullAction() => portfolio.GetAllAssetsWithSameSymbol(null!);

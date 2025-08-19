@@ -1,23 +1,47 @@
 namespace InvestmentPortfolio;
 
-public class Asset(
-    string symbol,
-    string name,
-    string type,
-    double currentPrice,
-    int quantity = 1,
-    double paidPrice = 0,
-    DateTime purchaseDate = default)
+public class Asset
 {
-    public string Symbol { get; } = symbol.ToUpper();
-    public string Name { get; } = name;
-    public string Type { get; } = type;
-    public double CurrentPrice { get; } = currentPrice;
-    public int Quantity { get; private set; } = quantity > 0 ? quantity : 1;
-    public double PaidPrice { get; } = paidPrice > 0 ? paidPrice : currentPrice;
-    public DateTime PurchaseDate { get; } = purchaseDate == default ? DateTime.Now : purchaseDate;
-    public double ProfitOrLoss { get; } = currentPrice - paidPrice;
-    public bool IsProfit { get; } = currentPrice > paidPrice;
+    public Asset(
+        string symbol,
+        string name,
+        string type,
+        double currentPrice,
+        int quantity = 1,
+        double paidPrice = 0,
+        DateTime purchaseDate = default)
+    {
+        if (string.IsNullOrWhiteSpace(symbol))
+            throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
+        
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name cannot be null or empty.", nameof(name));
+        
+        if (string.IsNullOrWhiteSpace(type))
+            throw new ArgumentException("Type cannot be null or empty.", nameof(type));
+        
+        if (currentPrice <= 0)
+            throw new ArgumentOutOfRangeException(nameof(currentPrice), "Current price must be greater than zero.");
+        
+        Symbol = symbol.ToUpper();
+        Name = name;
+        Type = type;
+        CurrentPrice = currentPrice;
+        Quantity = quantity > 0 ? quantity : 1;
+        PaidPrice = paidPrice > 0 ? paidPrice : currentPrice;
+        PurchaseDate = purchaseDate == default ? DateTime.Now : purchaseDate;
+    }
+    
+    public string Symbol { get; }
+    public string Name { get; }
+    public string Type { get; }
+    public double CurrentPrice { get; }
+    public int Quantity { get; private set; }
+    public double PaidPrice { get; }
+    public DateTime PurchaseDate { get; }
+    
+    public double GetProfitOrLoss() => CurrentPrice - PaidPrice;
+    public bool IsProfit() => CurrentPrice > PaidPrice;
     
     
     /// <summary>Add the specified quantity to the asset's current quantity.</summary>

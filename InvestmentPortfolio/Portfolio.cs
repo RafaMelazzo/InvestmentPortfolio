@@ -134,7 +134,7 @@ public partial class Portfolio
             );
         
         if (assets.Count > 1)
-            assets = assets.OrderByDescending(a => a.ProfitOrLoss).ToList();
+            assets = assets.OrderByDescending(a => a.GetProfitOrLoss()).ToList();
         
         var firstAsset = assets.First();
         var assetSymbol = firstAsset.Symbol;
