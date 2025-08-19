@@ -2,7 +2,7 @@
 
 var portfolio = new Portfolio(
     "Tony Stark",
-    "123.456.789-10"
+    "353.745.272-15" // Random valid CPF for testing purposes
 );
 AddSampleDataToPortfolio();
 

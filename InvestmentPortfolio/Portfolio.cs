@@ -200,12 +200,48 @@ public partial class Portfolio
     {
         if (string.IsNullOrWhiteSpace(cpf))
             throw new ValidationException("CPF não pode ser nulo ou vazio.");
+        
+        if (!ValidateCpf(cpf))
+            throw new ValidationException("CPF inválido.");
+
+        var cpfNumbers = AnyNonDigitRegex().Replace(cpf, "");
+        return $"{cpfNumbers[..3]}.{cpfNumbers[3..6]}.{cpfNumbers[6..9]}-{cpfNumbers[9..11]}";
+    }
+
+    private static bool ValidateCpf(string cpf)
+    {
+        if (string.IsNullOrWhiteSpace(cpf))
+            return false;
 
         var cpfNumbers = AnyNonDigitRegex().Replace(cpf, "");
         if (cpfNumbers.Length != 11)
-            throw new ValidationException("CPF deve conter exatamente 11 dígitos.");
+            return false;
+
+        // Check for repeated digits
+        if (new string(cpfNumbers[0], 11) == cpfNumbers)
+            return false;
+
+        // Validate CPF digits
+        var sum = 0;
+        for (var i = 0; i < 9; i++)
+            sum += (cpfNumbers[i] - '0') * (10 - i);
         
-        return $"{cpfNumbers[..3]}.{cpfNumbers[3..6]}.{cpfNumbers[6..9]}-{cpfNumbers[9..11]}";
+        var firstCheckDigit = (sum * 10) % 11;
+        if (firstCheckDigit == 10)
+            firstCheckDigit = 0;
+
+        if (firstCheckDigit != cpfNumbers[9] - '0')
+            return false;
+
+        sum = 0;
+        for (var i = 0; i < 10; i++)
+            sum += (cpfNumbers[i] - '0') * (11 - i);
+        
+        var secondCheckDigit = (sum * 10) % 11;
+        if (secondCheckDigit == 10)
+            secondCheckDigit = 0;
+
+        return secondCheckDigit == cpfNumbers[10] - '0';
     }
 
     [GeneratedRegex(@"\D")]
