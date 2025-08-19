@@ -16,17 +16,22 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ATable_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002Econfig_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003F37af88562ddd63281a13a8f0f1cc663f6cac7c12b395f0c4fb4fc6637c7c7ee0_003FTable_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AThrowHelper_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002Econfig_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003F8874fa6fbc50b05ba8332188d36141eb4bba81fb1f92189ba9d7a25f545_003FThrowHelper_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/Environment/Highlighting/HighlightingSourceSnapshotLocation/@EntryValue">/home/rafael.melazzo/.cache/JetBrains/Rider2025.1/resharper-host/temp/Rider/vAny/CoverageData/_InvestmentPortfolio.1516999441/Snapshot/snapshot.utdcvr</s:String>
+	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=19cabe78_002D0f5e_002D4f14_002D8c52_002Db5c99294ab75/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AssetTests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::16DB3704-0A25-4B48-863A-1D6E416662D5::net9.0::InvestmentPortfolioTests.AssetTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	
+	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=365fbe94_002D2529_002D4e4b_002D82cd_002D818c96dec4c1/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PortfolioTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::16DB3704-0A25-4B48-863A-1D6E416662D5::net9.0::InvestmentPortfolioTests.PortfolioTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	
+	
+	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6f417c92_002Dfbbc_002D43eb_002D83e8_002Dca781c255f31/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AssetTests #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::16DB3704-0A25-4B48-863A-1D6E416662D5::net9.0::InvestmentPortfolioTests.AssetTests&lt;/TestId&gt;
@@ -39,6 +44,7 @@
     &lt;TestId&gt;xUnit::16DB3704-0A25-4B48-863A-1D6E416662D5::net9.0::InvestmentPortfolioTests.AssetTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	
 	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=dbc5fef9_002D4f8b_002D439e_002Dbf8f_002D931e959b2565/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AssetTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
