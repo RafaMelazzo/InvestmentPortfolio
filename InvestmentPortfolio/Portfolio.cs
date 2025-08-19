@@ -2,41 +2,30 @@ using System.Text.RegularExpressions;
 
 namespace InvestmentPortfolio;
 
-public partial class Portfolio(
-    string name,
-    string cpf,
-    List<Asset> assets = null!,
-    double walletBalance = 0)
+public partial class Portfolio
 {
-    private readonly string _cpf;
-    private double _walletBalance;
-    public string Name { get; } = name;
-    public string Cpf
+    public Portfolio(
+        string name,
+        string cpf,
+        List<Asset>? assets = null,
+        double walletBalance = 0)
     {
-        get => _cpf;
-        private init => InitCpf(value);
+        Name = name;
+        Cpf = GetFormatedCpf(cpf);
+        Assets = assets ?? [];
+        WalletBalance = walletBalance;
     }
-    public List<Asset> Assets { get; private set; } = assets ?? [];
-    private double WalletBalance
-    {
-        get => _walletBalance;
-        set
-        {
-            if (value < 0)
-                throw new ValidationException("Wallet balance cannot be negative.");
-            _walletBalance = value;
-        }
-    }
+    
+    public string Name { get; }
+    public string Cpf { get; }
+    public List<Asset> Assets { get; }
+    private double WalletBalance { get; set; }
     
     public string GetFirstName() => Name.Split(' ')[0];
     public int GetAssetsTotalQuantity() => Assets.Sum(a => a.Quantity);
     public double GetAssetsTotalPaidValue() => Assets.Sum(a => a.PaidPrice * a.Quantity);
     public double GetAssetsTotalValue() => Assets.Sum(a => a.CurrentPrice * a.Quantity);
-
-    internal bool HasAsset(string symbol)
-    {
-        return Assets.Any(a => a.Symbol.Equals(symbol));
-    }
+    internal bool HasAsset(string symbol) => Assets.Any(a => a.Symbol.Equals(symbol));
 
     internal Asset? GetAssetBySymbol(string symbol, double paidValue = 0)
     {
@@ -207,7 +196,7 @@ public partial class Portfolio(
             Assets.Remove(existingAsset);
     }
     
-    private static string InitCpf(string cpf)
+    private static string GetFormatedCpf(string cpf)
     {
         if (string.IsNullOrWhiteSpace(cpf))
             throw new ValidationException("CPF não pode ser nulo ou vazio.");
