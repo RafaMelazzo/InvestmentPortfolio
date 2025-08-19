@@ -7,13 +7,13 @@ public partial class Portfolio
     public Portfolio(
         string name,
         string cpf,
-        List<Asset>? assets = null,
-        double walletBalance = 0)
+        double walletBalance = 0,
+        List<Asset>? assets = null)
     {
         Name = name;
         Cpf = GetFormatedCpf(cpf);
-        Assets = assets ?? [];
         WalletBalance = walletBalance;
+        Assets = assets ?? [];
     }
     
     public string Name { get; }
