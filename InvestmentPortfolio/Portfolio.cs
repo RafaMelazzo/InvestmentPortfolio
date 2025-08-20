@@ -30,7 +30,7 @@ public partial class Portfolio
     internal Asset? GetAssetBySymbol(string symbol, double paidValue = 0)
     {
         if (string.IsNullOrWhiteSpace(symbol))
-            throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
+            throw new ArgumentException("Symbol cannot be null or empty.");
 
         if (paidValue <= 0)
             return Assets.FirstOrDefault(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase))
@@ -46,23 +46,22 @@ public partial class Portfolio
 
     public List<Asset> GetAllAssetsWithSameSymbol(string symbol)
     {
-        if (string.IsNullOrWhiteSpace(symbol))
-            throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
-
-        return Assets.FindAll(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        return string.IsNullOrWhiteSpace(symbol)
+            ? throw new ArgumentException("Symbol cannot be null or empty.")
+            : Assets.FindAll(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
     }
 
     public void AddAsset(Asset asset, int quantity = 1, double paidValue = 0, DateTime purchaseDate = default)
     {
         if (asset == null)
-            throw new ArgumentNullException(nameof(asset), "Asset cannot be null.");
+            throw new ArgumentNullException("Asset cannot be null.");
         
         if (quantity < 1)
-            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be greater than zero.");
+            throw new ArgumentOutOfRangeException("Quantity must be greater than zero.");
 
         paidValue = paidValue switch
         {
-            < 0 => throw new ArgumentOutOfRangeException(nameof(paidValue), "Paid value cannot be negative."),
+            < 0 => throw new ArgumentOutOfRangeException("Paid value cannot be negative."),
             0   => asset.CurrentPrice,
             _   => paidValue
         };
@@ -72,31 +71,45 @@ public partial class Portfolio
 
         var stockMarketAssets = StockMarket.GetAllAssets();
         var assetExists = stockMarketAssets.Exists(a => a.Symbol == asset.Symbol);
+        
         if (!assetExists)
-        {
-            TerminalHelper.ShowError($"Ativo com o símbolo \"{asset.Symbol}\" não encontrado no mercado.");
-            return;
-        }
+            throw new ValidationException($"Ativo com o símbolo \"{asset.Symbol}\" não encontrado no mercado." );
         
         var portfolioHasAsset = HasAsset(asset.Symbol);
         var assetsCost = Helper.DoubleToCurrency(paidValue * quantity);
         
         List<Asset> existingAssets = [];
         if (portfolioHasAsset)
-            existingAssets = GetAllAssetsWithSameSymbol(asset.Symbol);
+        {
+            try
+            {
+                existingAssets = GetAllAssetsWithSameSymbol(asset.Symbol);
+            }
+            catch (PortfolioException e)
+            {
+                TerminalHelper.ShowError(e.Message);
+            }
+            catch (Exception)
+            {
+                TerminalHelper.ShowError("Ocorreu um erro inesperado ao buscar todos ativos com o mesmo símbolo.");
+            }
+        }
 
         if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqual(a.PaidPrice, paidValue)))
         {
             asset = existingAssets.First(a => Helper.NearlyEqual(a.PaidPrice, paidValue));
-            
+
             try
             {
                 Asset.AddQuantityToAsset(asset, quantity);
             }
-            catch (Exception e)
+            catch (PortfolioException e)
             {
                 TerminalHelper.ShowError(e.Message);
-                throw;
+            }
+            catch (Exception)
+            {
+                TerminalHelper.ShowError("Ocorreu um erro inesperado ao aumentar a quantidade de um ativo existente.");
             }
             
             Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
@@ -120,18 +133,16 @@ public partial class Portfolio
     public void SellAsset(List<Asset> assets, int sellingQuantity = 1)
     {
         if (assets == null || assets.Count == 0)
-            throw new ArgumentException("Asset list cannot be null or empty.", nameof(assets));
+            throw new ArgumentException("Asset list cannot be null or empty.");
         
         if (sellingQuantity < 1)
-            throw new ArgumentOutOfRangeException(nameof(sellingQuantity), "Quantity must be greater than zero.");
+            throw new ArgumentOutOfRangeException("Quantity must be greater than zero.");
         
         var assetsTotalQuantity = assets.Sum(a => a.Quantity);
         
         if (sellingQuantity > assetsTotalQuantity)
             throw new ArgumentOutOfRangeException(
-                nameof(sellingQuantity),
-                $"You do not have {sellingQuantity} units of this asset. Available: {assetsTotalQuantity}"
-            );
+                $"You do not have {sellingQuantity} units of this asset. Available: {assetsTotalQuantity}");
         
         if (assets.Count > 1)
             assets = assets.OrderByDescending(a => a.GetProfitOrLoss()).ToList();
@@ -167,10 +178,10 @@ public partial class Portfolio
     private void ReduceAssetQuantity(Asset asset, int quantity)
     {
         if (asset == null)
-            throw new ArgumentNullException(nameof(asset), "Asset cannot be null.");
+            throw new ArgumentNullException("Asset cannot be null.");
         
         if (quantity < 1)
-            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be greater than zero.");
+            throw new ArgumentOutOfRangeException("Quantity must be greater than zero.");
         
         if (!HasAsset(asset.Symbol))
             throw new InvalidOperationException($"Asset with symbol {asset.Symbol} does not exist in the portfolio.");

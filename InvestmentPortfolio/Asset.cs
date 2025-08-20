@@ -12,16 +12,16 @@ public class Asset
         DateTime purchaseDate = default)
     {
         if (string.IsNullOrWhiteSpace(symbol))
-            throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
+            throw new ArgumentException("Symbol cannot be null or empty.");
         
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name cannot be null or empty.", nameof(name));
+            throw new ArgumentException("Name cannot be null or empty.");
         
         if (string.IsNullOrWhiteSpace(type))
-            throw new ArgumentException("Type cannot be null or empty.", nameof(type));
+            throw new ArgumentException("Type cannot be null or empty.");
         
         if (currentPrice <= 0)
-            throw new ArgumentOutOfRangeException(nameof(currentPrice), "Current price must be greater than zero.");
+            throw new ArgumentOutOfRangeException("Current price must be greater than zero.");
         
         Symbol = symbol.ToUpper();
         Name = name;

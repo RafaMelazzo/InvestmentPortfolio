@@ -73,17 +73,31 @@ void AddSampleDataToPortfolio()
                 // Nothing to change here. Testing with minimum data.
                 break;
         }
-        
-        portfolio.AddAsset(
-            asset,
-            quantity,
-            paidPrice,
-            purchaseDate
-        );
-    }
 
-    portfolio.AddAsset(
-        StockMarket.GetAssetBySymbol("STNE")!,
-        7
-    );
+        try
+        {
+            portfolio.AddAsset(asset, quantity, paidPrice, purchaseDate);
+        }
+        catch (PortfolioException e)
+        {
+            TerminalHelper.ShowError(e.Message);
+        }
+        catch (Exception)
+        {
+            TerminalHelper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
+        }
+    }
+    
+    try
+    {
+        portfolio.AddAsset(StockMarket.GetAssetBySymbol("STNE")!, 7);
+    }
+    catch (PortfolioException e)
+    {
+        TerminalHelper.ShowError(e.Message);
+    }
+    catch (Exception)
+    {
+        TerminalHelper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
+    }
 }

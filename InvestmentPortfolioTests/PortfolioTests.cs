@@ -1,4 +1,7 @@
 using InvestmentPortfolio;
+using ArgumentException = InvestmentPortfolio.ArgumentException;
+using ArgumentNullException = InvestmentPortfolio.ArgumentNullException;
+using ArgumentOutOfRangeException = InvestmentPortfolio.ArgumentOutOfRangeException;
 
 namespace InvestmentPortfolioTests;
 
@@ -191,8 +194,10 @@ public class PortfolioTests
         void EmptyAction() => portfolio.GetAssetBySymbol(string.Empty);
         
         // Assert
-        Assert.Throws<ArgumentException>(NullAction);
-        Assert.Throws<ArgumentException>(EmptyAction);
+        var nullException = Assert.Throws<ArgumentException>(NullAction);
+        var emptyException = Assert.Throws<ArgumentException>(EmptyAction);
+        Assert.Equal("Symbol cannot be null or empty.", nullException.Message);
+        Assert.Equal("Symbol cannot be null or empty.", emptyException.Message);
     }
     
     [Fact]
@@ -249,8 +254,10 @@ public class PortfolioTests
         void EmptyAction() => portfolio.GetAllAssetsWithSameSymbol(string.Empty);
         
         // Assert
-        Assert.Throws<ArgumentException>(NullAction);
-        Assert.Throws<ArgumentException>(EmptyAction);
+        var nullException = Assert.Throws<ArgumentException>(NullAction);
+        var emptyException = Assert.Throws<ArgumentException>(EmptyAction);
+        Assert.Equal("Symbol cannot be null or empty.", nullException.Message);
+        Assert.Equal("Symbol cannot be null or empty.", emptyException.Message);
     }
 
     [Fact]
@@ -258,15 +265,138 @@ public class PortfolioTests
     {
         // Arrange
         var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
-        var asset = new Asset("TEST", "Test Asset", "Ação", 100.0, 10, 50.0, new DateTime(2021, 1, 1));
+        var purchaseDate = DateTime.Now;
+        var asset = new Asset(
+            "STNE", // Needs to be an asset registered in the StockMarket
+            "Test Asset",
+            "Ação",
+            15.0,
+            1,
+            15,
+            purchaseDate);
 
         // Act
-        portfolio.AddAsset(asset, 5, 50.0, new DateTime(2023, 1, 1));
+        portfolio.AddAsset(asset, 1, 15.0, purchaseDate);
 
         // Assert
-        Assert.Contains(asset, portfolio.Assets);
+        Assert.Equivalent(asset, portfolio.GetAssetBySymbol("STNE"));
         Assert.Single(portfolio.Assets);
-        Assert.Equal(10, asset.Quantity);
-        Assert.Equal(50.0, asset.PaidPrice);
+    }
+
+    [Fact]
+    public void AddAsset_Should_ThrowArgumentNullException_WhenAssetIsNull()
+    {
+        // Arrange
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+
+        // Act
+        void Action() => portfolio.AddAsset(null!);
+
+        // Assert
+        var exception = Assert.Throws<ArgumentNullException>(Action);
+        Assert.Equal("Asset cannot be null.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void AddAsset_Should_ThrowArgumentOutOfRangeException_WhenQuantityIsInvalid(int invalidQuantity)
+    {
+        // Arrange
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        var asset = new Asset(
+            "STNE", // Needs to be an asset registered in the StockMarket
+            "Test Asset",
+            "Ação",
+            15.0,
+            1,
+            15,
+            DateTime.Now);
+
+        // Act
+        void Action() => portfolio.AddAsset(asset, invalidQuantity);
+
+        // Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(Action);
+        Assert.Equal("Quantity must be greater than zero.", exception.Message);
+    }
+
+    [Fact]
+    public void AddAsset_Should_ThrowArgumentOutOfRangeException_WhenPaidValueIsNegative()
+    {
+        // Arrange
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        var asset = new Asset(
+            "STNE", // Needs to be an asset registered in the StockMarket
+            "Test Asset",
+            "Ação",
+            15.0,
+            1,
+            15,
+            DateTime.Now);
+
+        // Act
+        void Action() => portfolio.AddAsset(asset, 1, -10.0);
+
+        // Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(Action);
+        Assert.Equal("Paid value cannot be negative.", exception.Message);
+    }
+
+    [Fact]
+    public void AddAsset_Should_ThrowPortfolioException_WhenAssetNotFoundInStockMarket()
+    {
+        // Arrange
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        var asset = new Asset(
+            "NONEXISTENT", // This asset does not exist in the StockMarket
+            "Nonexistent Asset",
+            "Ação",
+            15.0,
+            1,
+            15,
+            DateTime.Now);
+
+        // Act
+        void Action() => portfolio.AddAsset(asset);
+
+        // Assert
+        var exception = Assert.Throws<ValidationException>(Action);
+        Assert.Equal("Ativo com o símbolo \"NONEXISTENT\" não encontrado no mercado.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(1, 10)]
+    [InlineData(1, 100)]
+    [InlineData(2, 10)]
+    [InlineData(2, 50)]
+    [InlineData(2, 75)]
+    [InlineData(2, 100)]
+    public void SellAsset_Should_SellAsset_WhenValidParametersAreProvided(
+        int assetsCount,
+        int quantityToSell)
+    {
+        // Arrange
+        List<Asset> assets = [];
+        var quantityPerAsset = 100 / assetsCount;
+        assets.AddRange(Enumerable.Range(1, assetsCount)
+            .Select(i => new Asset(
+                "TEST",
+                "Test Asset",
+                "Ação",
+                100.0,
+                quantityPerAsset,
+                10.0 * i, // Different paid price for each asset
+                new DateTime(2025, 12, 1))
+            )
+        );
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15", 0, assets);
+        var portfolioAssets = portfolio.GetAllAssetsWithSameSymbol("TEST").OrderBy(a => a.PaidPrice).ToList();
+
+        // Act
+        portfolio.SellAsset(assets, quantityToSell);
+
+        // Assert
+        
     }
 }

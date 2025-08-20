@@ -67,11 +67,12 @@ public abstract class Terminal
         var assetSymbol = AnsiConsole.Prompt(
                 new TextPrompt<string>("Digite o símbolo do ativo [grey](ex: STNE, AAPL, GOOGL)[/]: ")
             ).ToUpper().Trim();
-        // if (!StockMarket.AssetExists(assetSymbol))
-        // {
-        //     TerminalHelper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado no mercado de ações.");
-        //     return;
-        // }
+        
+        if (!StockMarket.AssetExists(assetSymbol))
+        {
+            TerminalHelper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado no mercado de ações.");
+            return;
+        }
         
         var asset = StockMarket.GetAssetBySymbol(assetSymbol);
         if (asset == null)
@@ -90,8 +91,19 @@ public abstract class Terminal
                         ? ValidationResult.Error("[red]A quantidade deve ser maior que zero.[/]")
                         : ValidationResult.Success())
         );
-        
-        portfolio.AddAsset(asset, quantity);
+
+        try
+        {
+            portfolio.AddAsset(asset, quantity);
+        }
+        catch (PortfolioException e)
+        {
+            TerminalHelper.ShowError(e.Message);
+        }
+        catch (Exception)
+        {
+            TerminalHelper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
+        }
         
         TerminalHelper.BackToStart();
     }
@@ -139,8 +151,19 @@ public abstract class Terminal
                         ? ValidationResult.Error($"[red]Você não possui[/] [bold blue]{q}[/] [red]unidades deste ativo.[/]")
                         : ValidationResult.Success())
         );
-        
-        portfolio.SellAsset(assets, quantity);
+
+        try
+        {
+            portfolio.SellAsset(assets, quantity);
+        }
+        catch (PortfolioException e)
+        {
+            TerminalHelper.ShowError(e.Message);
+        }
+        catch (Exception)
+        {
+            TerminalHelper.ShowError("Ocorreu um erro inesperado ao vender o ativo.");
+        }
         
         TerminalHelper.BackToStart();
     }
@@ -247,7 +270,7 @@ public abstract class Terminal
         switch (assets.Count)
         {
             case <0:
-                throw new ArgumentException("Asset list cannot be null or empty.", nameof(assets));
+                throw new ArgumentException("Asset list cannot be null or empty.");
             case 0:
                 TerminalHelper.ShowError("Nenhum ativo encontrado.");
                 return;

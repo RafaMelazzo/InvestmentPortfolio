@@ -6,7 +6,7 @@ public abstract class StockMarket
 
     protected StockMarket(List<Asset>? assets = null)
     {
-        Assets = assets ?? new List<Asset>();
+        Assets = assets ?? [];
     }
 
     public static List<Asset> GetAllAssets()
@@ -88,7 +88,7 @@ public abstract class StockMarket
     public static bool AssetExists(string symbol)
     {
         if (string.IsNullOrWhiteSpace(symbol))
-            throw new ArgumentException("Symbol cannot be null or empty.", nameof(symbol));
+            throw new ArgumentException("Symbol cannot be null or empty.");
         
         var assets = GetAllAssets();
         return assets.Any(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
