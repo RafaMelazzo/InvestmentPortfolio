@@ -1,9 +1,63 @@
 ﻿using InvestmentPortfolio;
+using ArgumentException = InvestmentPortfolio.ArgumentException;
+using ArgumentOutOfRangeException = InvestmentPortfolio.ArgumentOutOfRangeException;
 
 namespace InvestmentPortfolioTests;
 
 public class AssetTests
 {
+    [Theory]
+    [InlineData(null, "Test Asset", "Ação", 100.0, "symbol")]
+    [InlineData("", "Test Asset", "Ação", 100.0, "symbol")]
+    [InlineData(" ", "Test Asset", "Ação", 100.0, "symbol")]
+    [InlineData("TEST", null, "Ação", 100.0, "name")]
+    [InlineData("TEST", "", "Ação", 100.0, "name")]
+    [InlineData("TEST", " ", "Ação", 100.0, "name")]
+    [InlineData("TEST", "Test Asset", null, 100.0, "type")]
+    [InlineData("TEST", "Test Asset", "", 100.0, "type")]
+    [InlineData("TEST", "Test Asset", " ", 100.0, "type")]
+    [InlineData("TEST", "Test Asset", "Ação", 0.0, "currentPrice")]
+    [InlineData("TEST", "Test Asset", "Ação", -1.0, "currentPrice")]
+    public void Asset_Should_ThrowException_WhenValuesAreNullOrWhiteSpaces_Or_CurrentPrice_IsLessThanOne(
+        string? symbol,
+        string? name,
+        string? type,
+        double currentPrice,
+        string invalidParameter)
+    {
+        // Arrange
+        Exception exception;
+        
+        // Act
+        void Action() => new Asset(
+            symbol!,
+            name!,
+            type!,
+            currentPrice
+        );
+        
+        // Assert
+        switch (invalidParameter)
+        {
+            case "symbol":
+                exception = Assert.Throws<ArgumentException>((Action)Action);
+                Assert.Equal("Symbol cannot be null or empty.", exception.Message);
+                break;
+            case "name":
+                exception = Assert.Throws<ArgumentException>((Action)Action);
+                Assert.Equal("Name cannot be null or empty.", exception.Message);
+                break;
+            case "type":
+                exception = Assert.Throws<ArgumentException>((Action)Action);
+                Assert.Equal("Type cannot be null or empty.", exception.Message);
+                break;
+            case "currentPrice":
+                exception = Assert.Throws<ArgumentOutOfRangeException>((Action)Action);
+                Assert.Equal("Current price must be greater than zero.", exception.Message);
+                break;
+        }
+    }
+    
     [Theory]
     [InlineData(100, 50, 50)]
     [InlineData(150, 150, 0)]

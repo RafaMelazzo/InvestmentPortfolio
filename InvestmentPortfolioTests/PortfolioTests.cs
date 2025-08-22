@@ -2,6 +2,7 @@ using InvestmentPortfolio;
 using ArgumentException = InvestmentPortfolio.ArgumentException;
 using ArgumentNullException = InvestmentPortfolio.ArgumentNullException;
 using ArgumentOutOfRangeException = InvestmentPortfolio.ArgumentOutOfRangeException;
+using InvalidOperationException = InvestmentPortfolio.InvalidOperationException;
 
 namespace InvestmentPortfolioTests;
 
@@ -367,36 +368,306 @@ public class PortfolioTests
 
     [Theory]
     [InlineData(1, 10)]
-    [InlineData(1, 100)]
-    [InlineData(2, 10)]
+    [InlineData(1, 100, 1)]
     [InlineData(2, 50)]
-    [InlineData(2, 75)]
-    [InlineData(2, 100)]
+    [InlineData(2, 100, 1)]
+    [InlineData(2, 110, 1)]
+    [InlineData(2, 200, 2)]
     public void SellAsset_Should_SellAsset_WhenValidParametersAreProvided(
         int assetsCount,
-        int quantityToSell)
+        int quantityToSell,
+        int removedAssetsCount = 0)
     {
         // Arrange
         List<Asset> assets = [];
-        var quantityPerAsset = 100 / assetsCount;
         assets.AddRange(Enumerable.Range(1, assetsCount)
             .Select(i => new Asset(
                 "TEST",
                 "Test Asset",
                 "Ação",
-                100.0,
-                quantityPerAsset,
+                300.0,
+                100,
                 10.0 * i, // Different paid price for each asset
                 new DateTime(2025, 12, 1))
             )
         );
         var portfolio = new Portfolio("Test Portfolio", "353.745.272-15", 0, assets);
-        var portfolioAssets = portfolio.GetAllAssetsWithSameSymbol("TEST").OrderBy(a => a.PaidPrice).ToList();
+        var sellingAssets = portfolio.GetAllAssetsWithSameSymbol("TEST");
 
         // Act
-        portfolio.SellAsset(assets, quantityToSell);
+        portfolio.SellAsset(sellingAssets, quantityToSell);
 
         // Assert
+        var remainingAssets = portfolio.GetAllAssetsWithSameSymbol("TEST");
+        Assert.Equal(assetsCount - removedAssetsCount, remainingAssets.Count);
+        var totalRemainingQuantity = remainingAssets.Sum(a => a.Quantity);
+        Assert.Equal(100 * assetsCount - quantityToSell, totalRemainingQuantity);
+    }
+
+    [Fact]
+    public void SellAsset_Should_ThrowArgumentException_WhenAssetsListIsNullOrEmpty()
+    {
+        // Arrange
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+
+        // Act
+        void NullAction() => portfolio.SellAsset(null!);
+        void EmptyAction() => portfolio.SellAsset(new List<Asset>());
+
+        // Assert
+        var nullException = Assert.Throws<ArgumentException>(NullAction);
+        var emptyException = Assert.Throws<ArgumentException>(EmptyAction);
+        Assert.Equal("Asset list cannot be null or empty.", nullException.Message);
+        Assert.Equal("Asset list cannot be null or empty.", emptyException.Message);
+    }
+
+    [Fact]
+    public void SellAsset_Should_ThrowArgumentOutOfRangeException_WhenQuantityToSellIsInvalid()
+    {
+        // Arrange
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        var assets = new List<Asset>
+        {
+            new("TEST",
+                "Test Asset",
+                "Ação",
+                300.0,
+                100,
+                10.0,
+                new DateTime(2025, 12, 1))
+        };
+        portfolio.Assets.AddRange(assets);
+        var sellingAssets = portfolio.GetAllAssetsWithSameSymbol("TEST");
+
+        // Act
+        void Action() => portfolio.SellAsset(sellingAssets, 0);
+
+        // Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(Action);
+        Assert.Equal("Quantity must be greater than zero.", exception.Message);
+    }
+
+    [Fact]
+    public void SellAsset_Should_ThrowArgumentOutOfRangeException_WhenSellingMoreThanAvailableQuantity()
+    {
+        // Arrange
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        var assets = new List<Asset>
+        {
+            new("TEST",
+                "Test Asset",
+                "Ação",
+                300.0,
+                100,
+                10.0,
+                new DateTime(2025, 12, 1))
+        };
+        portfolio.Assets.AddRange(assets);
+        var sellingAssets = portfolio.GetAllAssetsWithSameSymbol("TEST");
+
+        // Act
+        void Action() => portfolio.SellAsset(sellingAssets, 200);
+
+        // Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(Action);
+        Assert.Equal("You do not have 200 units of this asset. Available: 100.", exception.Message);
+    }
+    
+    [Theory]
+    [InlineData(10)]
+    [InlineData(100, true)]
+    public void ReduceAssetQuantity_Should_RemoveAsset_WhenQuantityReachesZero_Or_ReduceQuantityOtherwise(
+        int quantityToSell,
+        bool assetShouldBeRemoved = false)
+    {
+        // Arrange
+        var asset = new Asset(
+            "TEST",
+            "Test Asset",
+            "Ação",
+            300.0,
+            100,
+            10.0,
+            new DateTime(2025, 12, 1));
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        portfolio.Assets.Add(asset);
+        var initialQuantity = asset.Quantity;
         
+        // Act
+        portfolio.ReduceAssetQuantity(asset, quantityToSell);
+        
+        // Assert
+        if (assetShouldBeRemoved)
+            Assert.False(portfolio.HasAsset("TEST"));
+        else
+            Assert.Equal(initialQuantity - quantityToSell, asset.Quantity);
+    }
+
+    [Fact]
+    public void ReduceAssetQuantity_Should_ThrowArgumentNullException_WhenAssetIsNull()
+    {
+        // Arrange
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+
+        // Act
+        void Action() => portfolio.ReduceAssetQuantity(null!, 10);
+
+        // Assert
+        var exception = Assert.Throws<ArgumentNullException>(Action);
+        Assert.Equal("Asset cannot be null.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void ReduceAssetQuantity_Should_ThrowArgumentOutOfRangeException_WhenQuantityIsInvalid(int invalidQuantity)
+    {
+        // Arrange
+        var asset = new Asset(
+            "TEST",
+            "Test Asset",
+            "Ação",
+            300.0,
+            100,
+            10.0,
+            new DateTime(2025, 12, 1));
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        portfolio.Assets.Add(asset);
+        
+        // Act
+        void Action() => portfolio.ReduceAssetQuantity(asset, invalidQuantity);
+        
+        // Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(Action);
+        Assert.Equal("Quantity must be greater than zero.", exception.Message);
+    }
+
+    [Fact]
+    public void ReduceAssetQuantity_Should_ThrowInvalidOperationException_WhenAssetDoesNotExistInPortfolio()
+    {
+        // Arrange
+        var asset = new Asset(
+            "TEST",
+            "Test Asset",
+            "Ação",
+            300.0,
+            100,
+            10.0,
+            new DateTime(2025, 12, 1));
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        
+        // Act
+        void Action() => portfolio.ReduceAssetQuantity(asset, 10);
+        
+        // Assert
+        var exception = Assert.Throws<InvalidOperationException>(Action);
+        Assert.Equal("Asset with symbol TEST does not exist in the portfolio.", exception.Message);
+    }
+
+    [Fact]
+    public void ReduceAssetQuantity_Should_ThrowInvalidOperationException_When_GetAssetBySymbol_ReturnsNull()
+    {
+        // Arrange
+        var asset = new Asset(
+            "TEST",
+            "Test Asset",
+            "Ação",
+            300.0,
+            100,
+            10.0,
+            new DateTime(2025, 12, 1));
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        portfolio.Assets.Add(asset);
+        
+        // Act
+        void Action() => portfolio.ReduceAssetQuantity(new Asset(
+            "NONEXISTENT",
+            "Nonexistent Asset",
+            "Ação",
+            300.0,
+            100,
+            10.0,
+            new DateTime(2025, 12, 1)), 10);
+        
+        // Assert
+        var exception = Assert.Throws<InvalidOperationException>(Action);
+        Assert.Equal("Asset with symbol NONEXISTENT does not exist in the portfolio.", exception.Message);
+    }
+    
+    [Fact]
+    public void GetFormatedCpf_Should_ReturnFormattedCpf_WhenValidCpfIsProvided()
+    {
+        // Act
+        var formattedCpf = Portfolio.GetFormatedCpf("35374527215");
+
+        // Assert
+        Assert.Equal("353.745.272-15", formattedCpf);
+    }
+
+    [Fact]
+    public void GetFormatedCpf_Should_ThrowValidationException_WhenCpfIsNullOrEmpty()
+    {
+        // Act
+        void NullAction() => Portfolio.GetFormatedCpf(null!);
+        void EmptyAction() => Portfolio.GetFormatedCpf(string.Empty);
+
+        // Assert
+        var nullException = Assert.Throws<ValidationException>(NullAction);
+        var emptyException = Assert.Throws<ValidationException>(EmptyAction);
+        Assert.Equal("CPF não pode ser nulo ou vazio.", nullException.Message);
+        Assert.Equal("CPF não pode ser nulo ou vazio.", emptyException.Message);
+    }
+
+    [Fact]
+    public void GetFormatedCpf_Should_ThrowValidationException_WhenCpfIsInvalid()
+    {
+        // Act
+        void InvalidCpf() => Portfolio.GetFormatedCpf("12345678910");
+        void InvalidCpfLenght() => Portfolio.GetFormatedCpf("123");
+
+        // Assert
+        var invalidCpfException = Assert.Throws<ValidationException>(InvalidCpf);
+        Assert.Equal("CPF inválido.", invalidCpfException.Message);
+        var invalidCpfLengthException = Assert.Throws<ValidationException>(InvalidCpfLenght);
+        Assert.Equal("CPF inválido.", invalidCpfLengthException.Message);
+    }
+
+    [Fact]
+    public void ValidateCpf_Should_ReturnTrue_WhenValidCpfIsProvided_Or_ReturnFalseOtherwise()
+    {
+        // Act
+        var validCpf = Portfolio.ValidateCpf("35374527215");
+        var validCpfWithFormat = Portfolio.ValidateCpf("353.745.272-15");
+        var invalidCpf = Portfolio.ValidateCpf("12345678910");
+        var invalidCpfLength = Portfolio.ValidateCpf("123");
+        var nullCpf = Portfolio.ValidateCpf(null!);
+        var emptyCpf = Portfolio.ValidateCpf(string.Empty);
+        var whitespaceCpf = Portfolio.ValidateCpf(" ");
+        var repeatedCpf = Portfolio.ValidateCpf("11111111111");
+
+        // Assert
+        Assert.True(validCpf);
+        Assert.True(validCpfWithFormat);
+        Assert.False(invalidCpf);
+        Assert.False(invalidCpfLength);
+        Assert.False(nullCpf);
+        Assert.False(emptyCpf);
+        Assert.False(whitespaceCpf);
+        Assert.False(repeatedCpf);
+    }
+    
+    [Theory]
+    [InlineData("123.456.789-10", "12345678910")]
+    [InlineData("12345678910", "12345678910")]
+    [InlineData("abc123", "123")]
+    [InlineData("abc123def456", "123456")]
+    [InlineData("!@#123!@#456", "123456")]
+    public void AnyNonDigitRegex__Should_ReplaceAllNonDigitCharacters(string input, string expectedOutput)
+    {
+        // Act
+        var result = Portfolio.AnyNonDigitRegex().Replace(input, "");
+
+        // Assert
+        Assert.Equal(expectedOutput, result);
     }
 }

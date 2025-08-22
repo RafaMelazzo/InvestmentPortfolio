@@ -44,11 +44,19 @@ public partial class Portfolio
         return asset ?? null;
     }
 
-    public List<Asset> GetAllAssetsWithSameSymbol(string symbol)
+    public List<Asset> GetAllAssetsWithSameSymbol(string symbol, string orderBy = nameof(Asset.PaidPrice))
     {
-        return string.IsNullOrWhiteSpace(symbol)
-            ? throw new ArgumentException("Symbol cannot be null or empty.")
-            : Assets.FindAll(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
+        if (string.IsNullOrWhiteSpace(symbol))
+            throw new ArgumentException("Symbol cannot be null or empty.");
+        
+        var property = typeof(Asset).GetProperty(orderBy);
+        if (property == null)
+            property = typeof(Asset).GetProperty(nameof(Asset.PaidPrice))!;
+        
+        return Assets
+            .FindAll(a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(a => property.GetValue(a, null))
+            .ToList();
     }
 
     public void AddAsset(Asset asset, int quantity = 1, double paidValue = 0, DateTime purchaseDate = default)
@@ -142,7 +150,7 @@ public partial class Portfolio
         
         if (sellingQuantity > assetsTotalQuantity)
             throw new ArgumentOutOfRangeException(
-                $"You do not have {sellingQuantity} units of this asset. Available: {assetsTotalQuantity}");
+                $"You do not have {sellingQuantity} units of this asset. Available: {assetsTotalQuantity}.");
         
         if (assets.Count > 1)
             assets = assets.OrderByDescending(a => a.GetProfitOrLoss()).ToList();
@@ -175,7 +183,7 @@ public partial class Portfolio
         Terminal.GetSoldAssetResponse(quantitySold, assetSymbol, assetEarning);
     }
     
-    private void ReduceAssetQuantity(Asset asset, int quantity)
+    internal void ReduceAssetQuantity(Asset asset, int quantity)
     {
         if (asset == null)
             throw new ArgumentNullException("Asset cannot be null.");
@@ -207,7 +215,7 @@ public partial class Portfolio
             Assets.Remove(existingAsset);
     }
     
-    private static string GetFormatedCpf(string cpf)
+    internal static string GetFormatedCpf(string cpf)
     {
         if (string.IsNullOrWhiteSpace(cpf))
             throw new ValidationException("CPF não pode ser nulo ou vazio.");
@@ -219,7 +227,7 @@ public partial class Portfolio
         return $"{cpfNumbers[..3]}.{cpfNumbers[3..6]}.{cpfNumbers[6..9]}-{cpfNumbers[9..11]}";
     }
 
-    private static bool ValidateCpf(string cpf)
+    internal static bool ValidateCpf(string cpf)
     {
         if (string.IsNullOrWhiteSpace(cpf))
             return false;
@@ -256,5 +264,5 @@ public partial class Portfolio
     }
 
     [GeneratedRegex(@"\D")]
-    private static partial Regex AnyNonDigitRegex();
+    internal static partial Regex AnyNonDigitRegex();
 }
