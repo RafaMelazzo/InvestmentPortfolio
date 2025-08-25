@@ -5,13 +5,11 @@ namespace InvestmentPortfolio;
 
 public static class Helper
 {
-    /**
-     * <summary>Checks if two double values are nearly equal within a given epsilon</summary>
-     * <param name="a">First value</param>
-     * <param name="b">Second value</param>
-     * <param name="epsilon">Tolerance for comparison</param>
-     * <returns>True if nearly equal, otherwise false</returns>
-     */
+    ///<summary>Checks if two double values are nearly equal within a given epsilon</summary>
+    ///<param name="a">First value</param>
+    ///<param name="b">Second value</param>
+    ///<param name="epsilon">Tolerance for comparison</param>
+    ///<returns>True if nearly equal, otherwise false</returns>
     public static bool NearlyEqual(double a, double b, double epsilon = double.Epsilon)
     {
         const double minNormal = 2.2250738585072014E-308d;
@@ -32,12 +30,10 @@ public static class Helper
         return diff / (absA + absB) < epsilon;
     }
     
-    /**
-     * <summary>Format a double value to currency string</summary>
-     * <param name="value">Value to be formatted</param>
-     * <param name="culture">Culture for formatting (default is "pt-BR")</param>
-     * <returns>string</returns>
-     */
+    ///<summary>Format a double value to currency string</summary>
+    ///<param name="value">Value to be formatted</param>
+    ///<param name="culture">Culture for formatting (default is "pt-BR")</param>
+    ///<returns>string</returns>
     public static string DoubleToCurrency(double value, string culture = "pt-BR")
     {
         return value.ToString("C", new CultureInfo(culture));

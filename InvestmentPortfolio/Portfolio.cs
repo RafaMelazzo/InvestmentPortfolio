@@ -44,6 +44,21 @@ public partial class Portfolio
         return asset ?? null;
     }
 
+    /// <summary>
+    ///  Returns a list of all assets with the same symbol, ordered by the specified property.
+    ///  If the property does not exist, it defaults to ordering by PaidPrice.
+    ///  If no assets with the specified symbol are found, it returns an empty list.
+    /// </summary>
+    /// <param name="symbol">The symbol of the assets to search for.</param>
+    /// <param name="orderBy">
+    ///  The property by which to order the assets.
+    ///  Possible values are `Name`, `Type`, `CurrentPrice`, `Quantity`, `PaidPrice`, or `PurchaseDate`.
+    ///  Also, `Symbol` is valid, but should return the assets without ordering, since this method returns all assets
+    ///  with the same symbol.
+    ///  If the property does not exist, it defaults to ordering by `PaidPrice`.
+    /// </param>
+    /// <exception cref="ArgumentException">Thrown when the symbol is null or empty.</exception>
+    /// <returns>The list of assets with the specified symbol, ordered by the specified property.</returns>
     public List<Asset> GetAllAssetsWithSameSymbol(string symbol, string orderBy = nameof(Asset.PaidPrice))
     {
         if (string.IsNullOrWhiteSpace(symbol))

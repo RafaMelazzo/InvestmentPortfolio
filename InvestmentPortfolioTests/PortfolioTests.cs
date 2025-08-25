@@ -1,3 +1,4 @@
+using System.Reflection;
 using InvestmentPortfolio;
 using ArgumentException = InvestmentPortfolio.ArgumentException;
 using ArgumentNullException = InvestmentPortfolio.ArgumentNullException;
@@ -8,6 +9,32 @@ namespace InvestmentPortfolioTests;
 
 public class PortfolioTests
 {
+    [Fact]
+    public void Constructor_Should_FormatCpf_WhenUnformattedCpfIsProvided()
+    {
+        // Act
+        var portfolio = new Portfolio("Test Portfolio", "35374527215");
+
+        // Assert
+        Assert.Equal("353.745.272-15", portfolio.Cpf);
+    }
+
+    [Theory]
+    [InlineData("11111111111")]
+    [InlineData("12345678910")]
+    [InlineData("123")]
+    [InlineData("abc123")]
+    [InlineData("!@#123!@#456")]
+    public void Constructor_Should_ThrowValidationException_WhenCpfIsInvalid(string invalidCpf)
+    {
+        // Act
+        void Action() => new Portfolio("Test Portfolio", invalidCpf);
+
+        // Assert
+        var ex = Assert.Throws<ValidationException>(Action);
+        Assert.Equal("CPF inválido.", ex.Message);
+    }
+    
     [Fact]
     public void GetFirstName_Should_ReturnFirstName_WhenPortfolioIsCreated()
     {
@@ -129,11 +156,13 @@ public class PortfolioTests
         var existingAsset1 = portfolio.HasAsset("TEST1");
         var existingAsset2 = portfolio.HasAsset("TEST2");
         var nonExistingAsset = portfolio.HasAsset("TEST3");
+        var caseSensitiveAsset = portfolio.HasAsset("test1"); // Should be case-sensitive
 
         // Assert
         Assert.True(existingAsset1);
         Assert.True(existingAsset2);
         Assert.False(nonExistingAsset);
+        Assert.False(caseSensitiveAsset);
     }
 
     [Theory]
@@ -215,10 +244,49 @@ public class PortfolioTests
 
         // Act
         var assets = portfolio.GetAllAssetsWithSameSymbol("TEST");
+        var caseInsensitiveAssets = portfolio.GetAllAssetsWithSameSymbol("test");
 
         // Assert
         Assert.Equal(2, assets.Count);
         Assert.All(assets, a => Assert.Equal("TEST", a.Symbol));
+        Assert.Equal(2, caseInsensitiveAssets.Count);
+        Assert.All(caseInsensitiveAssets, a => Assert.Equal("TEST", a.Symbol, ignoreCase: true));
+    }
+
+    [Theory]
+    [InlineData("Symbol")] // Should not change the order, since all symbols are the same
+    [InlineData("Name", 1, 2, 0)]
+    [InlineData("Type", 1, 0, 2)]
+    [InlineData("CurrentPrice", 0, 2, 1)]
+    [InlineData("Quantity", 0, 1, 2)]
+    [InlineData("PaidPrice", 2, 1, 0)]
+    [InlineData("PurchaseDate", 2, 0, 1)]
+    [InlineData("InexistentProperty", 2, 1, 0)] // Should default to PaidPrice
+    public void GetAllAssetsWithSameSymbol_Should_OrderBy_SpecifiedProperty_OrBy_PaidPrice_When_OrderBy_IsInvalid(
+        string orderBy,
+        int expectedFirst = 0,
+        int expectedSecond = 1,
+        int expectedThird = 2)
+    {
+        // Arrange
+        var mockAssets = new List<Asset>
+        {
+            new("TEST", "Test Asset B", "CDB", 100.0, 10, 150.0, new DateTime(2021, 1, 1)),
+            new("TEST", "Test Asset 1", "Ação", 300.0, 20,  100.0, new DateTime(2022, 1, 1)),
+            new("TEST", "Test Asset 3", "Direct Treasury", 200.0, 30, 50.0, new DateTime(2020, 1, 1))
+        };
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15", 0, mockAssets);
+
+        // Act
+        var orderedAssets = portfolio.GetAllAssetsWithSameSymbol("TEST", orderBy);
+        var expectedOrder = new List<Asset>();
+        expectedOrder.AddRange(
+            mockAssets[expectedFirst],
+            mockAssets[expectedSecond],
+            mockAssets[expectedThird]);
+
+        // Assert
+        Assert.Equal(expectedOrder, orderedAssets);
     }
 
     [Fact]
@@ -260,28 +328,97 @@ public class PortfolioTests
         Assert.Equal("Symbol cannot be null or empty.", nullException.Message);
         Assert.Equal("Symbol cannot be null or empty.", emptyException.Message);
     }
+    
+    public static IEnumerable<object[]> AddAssetTestData()
+    {
+        yield return [];
+        yield return [10];
+        yield return [10, 15.0];
+        yield return [10, 15.0, new DateTime(2023, 1, 1)];
+    }
 
-    [Fact]
-    public void AddAsset_Should_AddAsset_WhenValidParametersAreProvided()
+    [Theory]
+    [MemberData(nameof(AddAssetTestData))]
+    public void AddAsset_Should_AddAsset_WhenValidParametersAreProvided(
+        int? quantity = null,
+        double? paidPrice = null,
+        DateTime? purchaseDate = null)
     {
         // Arrange
         var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
-        var purchaseDate = DateTime.Now;
         var asset = new Asset(
-            "STNE", // Needs to be an asset registered in the StockMarket
+            "STNE", // Must exist in the StockMarket
             "Test Asset",
             "Ação",
-            15.0,
-            1,
-            15,
-            purchaseDate);
+            30.0);
+        var expectedAsset = new Asset(
+            "STNE",
+            "Test Asset",
+            "Ação",
+            30.0,
+            quantity ?? 1, // Default Asset quantity is 1
+            paidPrice ?? 30.0, // Default Asset paidPrice is currentPrice
+            purchaseDate ?? DateTime.Today); // Default Asset purchaseDate is today
 
         // Act
-        portfolio.AddAsset(asset, 1, 15.0, purchaseDate);
+        if (quantity.HasValue && paidPrice.HasValue && purchaseDate.HasValue)
+            portfolio.AddAsset(asset, quantity.Value, paidPrice.Value, purchaseDate.Value);
+        else if (quantity.HasValue && paidPrice.HasValue)
+            portfolio.AddAsset(asset, quantity.Value, paidPrice.Value);
+        else if (quantity.HasValue)
+            portfolio.AddAsset(asset, quantity.Value);
+        else
+            portfolio.AddAsset(asset);
+        
+        // Assert
+        Assert.Equivalent(expectedAsset, portfolio.GetAssetBySymbol("STNE"));
+        Assert.Single(portfolio.Assets);
+    }
+
+    [Fact]
+    public void AddAsset_Should_MergeQuantity_WhenSameSymbolAndPaidPrice()
+    {
+        // Arrange
+        var asset = new Asset(
+            "STNE",
+            "Test Asset",
+            "Ação",
+            12.0,
+            5);
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        portfolio.Assets.Add(asset);
+
+        // Act
+        portfolio.AddAsset(asset, 8);
 
         // Assert
-        Assert.Equivalent(asset, portfolio.GetAssetBySymbol("STNE"));
-        Assert.Single(portfolio.Assets);
+        var assets = portfolio.GetAssetBySymbol("STNE")!;
+        Assert.Equal(13, assets.Quantity);
+    }
+
+    [Fact]
+    public void AddAsset_Should_CreateNewAsset_WhenSameSymbolWithDifferentPaidPrice()
+    {
+        // Arrange
+        var asset = new Asset(
+            "STNE",
+            "Test Asset",
+            "Ação",
+            12.0,
+            5);
+        var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
+        portfolio.Assets.Add(asset);
+
+        // Act
+        portfolio.AddAsset(asset, 8, 14);
+
+        // Assert
+        var assets = portfolio.GetAllAssetsWithSameSymbol("STNE")!;
+        Assert.Equal(2, assets.Count);
+        Assert.Contains(assets, a => Helper.NearlyEqual(a.PaidPrice, 12.0));
+        Assert.Contains(assets, a => Helper.NearlyEqual(a.PaidPrice, 14.0));
+        Assert.Equal(5, assets.First(a => Helper.NearlyEqual(a.PaidPrice, 12.0)).Quantity);
+        Assert.Equal(8, assets.First(a => Helper.NearlyEqual(a.PaidPrice, 14.0)).Quantity);
     }
 
     [Fact]

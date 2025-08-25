@@ -29,7 +29,7 @@ public class Asset
         CurrentPrice = currentPrice;
         Quantity = quantity > 0 ? quantity : 1;
         PaidPrice = paidPrice > 0 ? paidPrice : currentPrice;
-        PurchaseDate = purchaseDate == default ? DateTime.Now : purchaseDate;
+        PurchaseDate = purchaseDate == default ? DateTime.Today : purchaseDate;
     }
     
     public string Symbol { get; }
@@ -46,7 +46,7 @@ public class Asset
     
     /// <summary>Add the specified quantity to the asset's current quantity.</summary>
     /// 
-    /// <param name="asset">The asset to which to add the quantity.</param>
+    /// <param name="asset">The asset which to add the quantity.</param>
     /// <param name="quantity">The quantity to add.</param>
     /// 
     /// <exception cref="ValidationException">Thrown when the quantity to add is less than or equal to zero.</exception>
