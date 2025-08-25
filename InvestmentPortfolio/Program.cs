@@ -16,7 +16,7 @@ void AddSampleDataToPortfolio()
     {
         var quantity = 1;
         var paidPrice = asset.CurrentPrice;
-        var purchaseDate = DateTime.Now;
+        var purchaseDate = DateTime.Today;
         
         switch (asset.Symbol)
         {

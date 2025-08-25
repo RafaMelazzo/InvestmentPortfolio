@@ -8,9 +8,9 @@ public static class Helper
     ///<summary>Checks if two double values are nearly equal within a given epsilon</summary>
     ///<param name="a">First value</param>
     ///<param name="b">Second value</param>
-    ///<param name="epsilon">Tolerance for comparison</param>
+    ///<param name="epsilon">Tolerance for comparison (default is double.Epsilon)</param>
     ///<returns>True if nearly equal, otherwise false</returns>
-    public static bool NearlyEqual(double a, double b, double epsilon = double.Epsilon)
+    public static bool NearlyEqualDouble(double a, double b, double epsilon = double.Epsilon)
     {
         const double minNormal = 2.2250738585072014E-308d;
         var absA = Math.Abs(a);
@@ -37,20 +37,5 @@ public static class Helper
     public static string DoubleToCurrency(double value, string culture = "pt-BR")
     {
         return value.ToString("C", new CultureInfo(culture));
-    }
-    
-    public static int? GetDynamicColumnWidth(Table table, int columnId, int cellPadding = 1)
-    {
-        var totalWidth = AnsiConsole.Console.Profile.Width;
-        var cellsPadding = cellPadding * 2 * table.Columns.Count;
-        int? columnsWidth = 0;
-        
-        for (var i = 0; i < table.Columns.Count; i++)
-        {
-            if (i == columnId) continue; // Skip the dynamic column
-            columnsWidth += table.Columns[i].Width;
-        }
-            
-        return totalWidth - cellsPadding - columnsWidth;
     }
 }

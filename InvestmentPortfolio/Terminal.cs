@@ -354,7 +354,7 @@ public abstract class Terminal
                 assetsTable.Columns[7]
                     .Width(28).NoWrap();
                 assetsTable.Columns[1]
-                    .Width(Helper.GetDynamicColumnWidth(assetsTable, 1)).NoWrap();
+                    .Width(TerminalHelper.GetDynamicColumnWidth(assetsTable, 1)).NoWrap();
                 
                 ctx.Refresh();
                 Thread.Sleep(TableDelay);

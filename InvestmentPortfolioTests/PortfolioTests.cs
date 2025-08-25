@@ -1,4 +1,3 @@
-using System.Reflection;
 using InvestmentPortfolio;
 using ArgumentException = InvestmentPortfolio.ArgumentException;
 using ArgumentNullException = InvestmentPortfolio.ArgumentNullException;
@@ -335,6 +334,7 @@ public class PortfolioTests
         yield return [10];
         yield return [10, 15.0];
         yield return [10, 15.0, new DateTime(2023, 1, 1)];
+        yield return [10, 15.0, DateTime.MaxValue];
     }
 
     [Theory]
@@ -358,7 +358,9 @@ public class PortfolioTests
             30.0,
             quantity ?? 1, // Default Asset quantity is 1
             paidPrice ?? 30.0, // Default Asset paidPrice is currentPrice
-            purchaseDate ?? DateTime.Today); // Default Asset purchaseDate is today
+            purchaseDate >= DateTime.Today
+                ? DateTime.Today
+                : purchaseDate ?? DateTime.Today); // Default Asset purchaseDate is today
 
         // Act
         if (quantity.HasValue && paidPrice.HasValue && purchaseDate.HasValue)
@@ -371,7 +373,12 @@ public class PortfolioTests
             portfolio.AddAsset(asset);
         
         // Assert
-        Assert.Equivalent(expectedAsset, portfolio.GetAssetBySymbol("STNE"));
+        var portfolioAsset = portfolio.GetAssetBySymbol("STNE")!;
+        
+        if (!purchaseDate.HasValue || purchaseDate.Value >= DateTime.Today)
+            Assert.Equal(DateTime.Today, portfolioAsset.PurchaseDate);
+        
+        Assert.Equivalent(expectedAsset, portfolioAsset);
         Assert.Single(portfolio.Assets);
     }
 
@@ -415,10 +422,10 @@ public class PortfolioTests
         // Assert
         var assets = portfolio.GetAllAssetsWithSameSymbol("STNE")!;
         Assert.Equal(2, assets.Count);
-        Assert.Contains(assets, a => Helper.NearlyEqual(a.PaidPrice, 12.0));
-        Assert.Contains(assets, a => Helper.NearlyEqual(a.PaidPrice, 14.0));
-        Assert.Equal(5, assets.First(a => Helper.NearlyEqual(a.PaidPrice, 12.0)).Quantity);
-        Assert.Equal(8, assets.First(a => Helper.NearlyEqual(a.PaidPrice, 14.0)).Quantity);
+        Assert.Contains(assets, a => Helper.NearlyEqualDouble(a.PaidPrice, 12.0));
+        Assert.Contains(assets, a => Helper.NearlyEqualDouble(a.PaidPrice, 14.0));
+        Assert.Equal(5, assets.First(a => Helper.NearlyEqualDouble(a.PaidPrice, 12.0)).Quantity);
+        Assert.Equal(8, assets.First(a => Helper.NearlyEqualDouble(a.PaidPrice, 14.0)).Quantity);
     }
 
     [Fact]
@@ -449,7 +456,7 @@ public class PortfolioTests
             15.0,
             1,
             15,
-            DateTime.Now);
+            DateTime.Today);
 
         // Act
         void Action() => portfolio.AddAsset(asset, invalidQuantity);
@@ -471,7 +478,7 @@ public class PortfolioTests
             15.0,
             1,
             15,
-            DateTime.Now);
+            DateTime.Today);
 
         // Act
         void Action() => portfolio.AddAsset(asset, 1, -10.0);
@@ -493,7 +500,7 @@ public class PortfolioTests
             15.0,
             1,
             15,
-            DateTime.Now);
+            DateTime.Today);
 
         // Act
         void Action() => portfolio.AddAsset(asset);

@@ -38,7 +38,7 @@ public partial class Portfolio
         
         var asset = Assets.FirstOrDefault(
             a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)
-                      && Helper.NearlyEqual(a.PaidPrice, paidValue)
+                      && Helper.NearlyEqualDouble(a.PaidPrice, paidValue)
         );
         
         return asset ?? null;
@@ -53,8 +53,8 @@ public partial class Portfolio
     /// <param name="orderBy">
     ///  The property by which to order the assets.
     ///  Possible values are `Name`, `Type`, `CurrentPrice`, `Quantity`, `PaidPrice`, or `PurchaseDate`.
-    ///  Also, `Symbol` is valid, but should return the assets without ordering, since this method returns all assets
-    ///  with the same symbol.
+    ///  These values are case-sensitive. Also, `Symbol` is valid, but will return the assets without ordering, since
+    ///  this method returns all assets with the same symbol.
     ///  If the property does not exist, it defaults to ordering by `PaidPrice`.
     /// </param>
     /// <exception cref="ArgumentException">Thrown when the symbol is null or empty.</exception>
@@ -89,7 +89,7 @@ public partial class Portfolio
             _   => paidValue
         };
         
-        if (purchaseDate == default || purchaseDate > DateTime.Now)
+        if (purchaseDate == default || purchaseDate > DateTime.Today)
             purchaseDate = DateTime.Today;
 
         var stockMarketAssets = StockMarket.GetAllAssets();
@@ -118,9 +118,9 @@ public partial class Portfolio
             }
         }
 
-        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqual(a.PaidPrice, paidValue)))
+        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqualDouble(a.PaidPrice, paidValue)))
         {
-            asset = existingAssets.First(a => Helper.NearlyEqual(a.PaidPrice, paidValue));
+            asset = existingAssets.First(a => Helper.NearlyEqualDouble(a.PaidPrice, paidValue));
 
             try
             {
@@ -209,9 +209,7 @@ public partial class Portfolio
         if (!HasAsset(asset.Symbol))
             throw new InvalidOperationException($"Asset with symbol {asset.Symbol} does not exist in the portfolio.");
 
-        var existingAsset = GetAssetBySymbol(asset.Symbol);
-        if (existingAsset == null)
-            throw new InvalidOperationException($"No asset found with symbol {asset.Symbol}.");
+        var existingAsset = GetAssetBySymbol(asset.Symbol)!;
 
         try
         {
