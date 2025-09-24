@@ -1,6 +1,6 @@
 using Spectre.Console;
 
-namespace InvestmentPortfolio;
+namespace InvestmentPortfolio.Terminal;
 
 public abstract class Terminal
 {

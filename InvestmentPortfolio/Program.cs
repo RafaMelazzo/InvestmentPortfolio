@@ -1,4 +1,5 @@
 ﻿using InvestmentPortfolio;
+using InvestmentPortfolio.Terminal;
 
 var portfolio = new Portfolio(
     "Tony Stark",

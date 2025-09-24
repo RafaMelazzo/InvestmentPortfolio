@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using InvestmentPortfolio.Terminal;
 
 namespace InvestmentPortfolio;
 
@@ -135,7 +136,7 @@ public partial class Portfolio
                 TerminalHelper.ShowError("Ocorreu um erro inesperado ao aumentar a quantidade de um ativo existente.");
             }
             
-            Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
+            Terminal.Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
             return;
         }
 
@@ -150,7 +151,7 @@ public partial class Portfolio
         );
         
         Assets.Add(newAsset);
-        Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
+        Terminal.Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
     }
 
     public void SellAsset(List<Asset> assets, int sellingQuantity = 1)
@@ -195,7 +196,7 @@ public partial class Portfolio
             }
         }
         
-        Terminal.GetSoldAssetResponse(quantitySold, assetSymbol, assetEarning);
+        Terminal.Terminal.GetSoldAssetResponse(quantitySold, assetSymbol, assetEarning);
     }
     
     internal void ReduceAssetQuantity(Asset asset, int quantity)
