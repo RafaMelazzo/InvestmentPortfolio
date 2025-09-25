@@ -13,7 +13,7 @@ public abstract class Terminal
         {
             Console.Clear();
             AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
-            AnsiConsole.MarkupLine($"\nBem-vindo, [bold blue]{portfolio.GetFirstName()}[/]!");
+            AnsiConsole.MarkupLine($"\nBem-vindo, [bold blue]{portfolio.Person.GetFirstName()}[/]!");
             Console.WriteLine("Para começar, selecione uma das opções abaixo.");
             
             AnsiConsole.MarkupLine("\n[bold orange3]OPÇÕES:[/]");
@@ -50,7 +50,7 @@ public abstract class Terminal
     {
         Console.Clear();
 
-        GetInfos(portfolio);
+        GetAccountInfo(portfolio);
         GetAssetsTable(portfolio);
         
         TerminalHelper.BackToStart();
@@ -60,7 +60,7 @@ public abstract class Terminal
     {
         Console.Clear();
 
-        GetInfos(portfolio);
+        GetAccountInfo(portfolio);
             
         AnsiConsole.Markup("\n\n[bold orange3]COMPRAR ATIVOS:[/]\n");
         
@@ -112,7 +112,7 @@ public abstract class Terminal
     {
         Console.Clear();
 
-        GetInfos(portfolio);
+        GetAccountInfo(portfolio);
             
         AnsiConsole.Markup("\n\n[bold orange3]VENDER ATIVOS:[/]\n");
         
@@ -217,19 +217,26 @@ public abstract class Terminal
             asset.Type,
             asset.Quantity.ToString(),
             asset.PurchaseDate.ToString("dd/MM/yyyy"),
-            $"{Helper.DoubleToCurrency(asset.PaidPrice)}\n({Helper.DoubleToCurrency(asset.PaidPrice * asset.Quantity)})",
-            $"{Helper.DoubleToCurrency(asset.CurrentPrice)}\n({Helper.DoubleToCurrency(asset.CurrentPrice * asset.Quantity)})",
+            $"{Helper.DoubleToCurrency(asset.PaidPrice)}" +
+                $"\n({Helper.DoubleToCurrency(asset.PaidPrice * asset.Quantity)})",
+            $"{Helper.DoubleToCurrency(asset.CurrentPrice)}" +
+                $"\n({Helper.DoubleToCurrency(asset.CurrentPrice * asset.Quantity)})",
             GetProfitOrLossCompleteValue(asset)
         );
     }
 
-    private static void GetInfos(Portfolio portfolio)
+    private static void GetAccountInfo(Portfolio portfolio)
     {
-        AnsiConsole.Markup($"\n[bold blue]Nome:[/] {portfolio.Name}" +
-                           $"\n[bold blue]CPF:[/] {portfolio.Cpf}" +
+        AnsiConsole.Markup($"\n[bold blue]Nome:[/] {portfolio.Person.Name}" +
+                           $"\n[bold blue]{portfolio.Person.DocumentType}:[/] " +
+                           $"{portfolio.Person.GetFormatedDocument(portfolio.Person.Document)}" +
+                           $"\n[bold blue]E-mail:[/] {portfolio.Person.Email}" +
+                           
                            $"\n\n[bold blue]Quantidade de Ativos:[/] {portfolio.Assets.Count}" +
                            "\n[bold blue]Saldo Total de Ativos:[/] " +
-                           $"{Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}");
+                           $"{Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}" +
+                           "\n[bold blue]Saldo da Carteira:[/] " +
+                           $"{Helper.DoubleToCurrency(portfolio.WalletBalance)}\n");
     }
     
     public static void GetBoughtAssetResponse(int quantityAdded, string assetSymbol, string assetsCost)

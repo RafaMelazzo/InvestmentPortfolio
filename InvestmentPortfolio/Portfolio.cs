@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using InvestmentPortfolio.Models;
 using InvestmentPortfolio.Terminal;
 
 namespace InvestmentPortfolio;
@@ -6,23 +7,19 @@ namespace InvestmentPortfolio;
 public partial class Portfolio
 {
     public Portfolio(
-        string name,
-        string cpf,
+        Person person,
         double walletBalance = 0,
         List<Asset>? assets = null)
     {
-        Name = name;
-        Cpf = GetFormatedCpf(cpf);
+        Person = person;
         WalletBalance = walletBalance;
         Assets = assets ?? [];
     }
     
-    public string Name { get; }
-    public string Cpf { get; }
+    public Person Person { get; }
     public List<Asset> Assets { get; }
-    private double WalletBalance { get; set; }
+    public double WalletBalance { get; private set; }
     
-    public string GetFirstName() => Name.Split(' ')[0];
     public int GetAssetsTotalQuantity() => Assets.Sum(a => a.Quantity);
     public double GetAssetsTotalPaidValue() => Assets.Sum(a => a.PaidPrice * a.Quantity);
     public double GetAssetsTotalValue() => Assets.Sum(a => a.CurrentPrice * a.Quantity);
@@ -228,55 +225,4 @@ public partial class Portfolio
         if (existingAsset.Quantity <= 0)
             Assets.Remove(existingAsset);
     }
-    
-    internal static string GetFormatedCpf(string cpf)
-    {
-        if (string.IsNullOrWhiteSpace(cpf))
-            throw new ValidationException("CPF não pode ser nulo ou vazio.");
-        
-        if (!ValidateCpf(cpf))
-            throw new ValidationException("CPF inválido.");
-
-        var cpfNumbers = AnyNonDigitRegex().Replace(cpf, "");
-        return $"{cpfNumbers[..3]}.{cpfNumbers[3..6]}.{cpfNumbers[6..9]}-{cpfNumbers[9..11]}";
-    }
-
-    internal static bool ValidateCpf(string cpf)
-    {
-        if (string.IsNullOrWhiteSpace(cpf))
-            return false;
-
-        var cpfNumbers = AnyNonDigitRegex().Replace(cpf, "");
-        if (cpfNumbers.Length != 11)
-            return false;
-
-        // Check for repeated digits
-        if (new string(cpfNumbers[0], 11) == cpfNumbers)
-            return false;
-
-        // Validate CPF digits
-        var sum = 0;
-        for (var i = 0; i < 9; i++)
-            sum += (cpfNumbers[i] - '0') * (10 - i);
-        
-        var firstCheckDigit = (sum * 10) % 11;
-        if (firstCheckDigit == 10)
-            firstCheckDigit = 0;
-
-        if (firstCheckDigit != cpfNumbers[9] - '0')
-            return false;
-
-        sum = 0;
-        for (var i = 0; i < 10; i++)
-            sum += (cpfNumbers[i] - '0') * (11 - i);
-        
-        var secondCheckDigit = (sum * 10) % 11;
-        if (secondCheckDigit == 10)
-            secondCheckDigit = 0;
-
-        return secondCheckDigit == cpfNumbers[10] - '0';
-    }
-
-    [GeneratedRegex(@"\D")]
-    internal static partial Regex AnyNonDigitRegex();
 }

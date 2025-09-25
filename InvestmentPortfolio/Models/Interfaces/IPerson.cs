@@ -1,9 +1,9 @@
 namespace InvestmentPortfolio.Models.Interfaces;
 
-public interface IUser
+public interface IPerson
 {
     string Name { get; }
-    int Document { get; }
+    string Document { get; }
     string DocumentType { get; }
     string Email { get; }
 }

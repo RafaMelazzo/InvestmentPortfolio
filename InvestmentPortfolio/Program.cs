@@ -1,9 +1,13 @@
 ﻿using InvestmentPortfolio;
+using InvestmentPortfolio.Models;
 using InvestmentPortfolio.Terminal;
 
 var portfolio = new Portfolio(
-    "Tony Stark",
-    "353.745.272-15" // Random valid CPF for testing purposes
+    new Person(
+        "Tony Stark",
+        "35374527215", // Random valid CPF for testing purposes
+        "tony@starkindustries.com"
+    )
 );
 AddSampleDataToPortfolio();
 

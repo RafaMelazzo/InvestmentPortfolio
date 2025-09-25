@@ -1,10 +1,14 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Spectre.Console;
 
 namespace InvestmentPortfolio;
 
-public static class Helper
+public static partial class Helper
 {
+    [GeneratedRegex(@"\D")]
+    internal static partial Regex AnyNonDigitRegex();
+    
     ///<summary>Checks if two double values are nearly equal within a given epsilon</summary>
     ///<param name="a">First value</param>
     ///<param name="b">Second value</param>
