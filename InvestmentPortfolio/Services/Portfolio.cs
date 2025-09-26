@@ -101,7 +101,6 @@ public class Portfolio
             throw new ValidationException($"Ativo com o símbolo \"{asset.Symbol}\" não encontrado no mercado." );
         
         var portfolioHasAsset = HasAsset(asset.Symbol);
-        var assetsCost = Helpers.Helper.DoubleToCurrency(paidValue * quantity);
         
         List<Asset> existingAssets = [];
         if (portfolioHasAsset)
@@ -138,7 +137,6 @@ public class Portfolio
                 Helper.ShowError("Ocorreu um erro inesperado ao aumentar a quantidade de um ativo existente.");
             }
             
-            Navigation.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
             return;
         }
 
@@ -154,7 +152,6 @@ public class Portfolio
         
         Assets.Add(newAsset);
         Wallet.Withdraw(paidValue * quantity);
-        Navigation.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
     }
 
     public void SellAsset(List<Asset> assets, int sellingQuantity = 1)
@@ -173,11 +170,6 @@ public class Portfolio
         
         if (assets.Count > 1)
             assets = assets.OrderByDescending(a => a.GetProfitOrLoss()).ToList();
-        
-        var firstAsset = assets.First();
-        var assetSymbol = firstAsset.Symbol;
-        var assetEarning = Helpers.Helper.DoubleToCurrency(firstAsset.CurrentPrice * sellingQuantity);
-        var quantitySold = sellingQuantity;
 
         while (sellingQuantity > 0 && assets.Count > 0)
         {
@@ -199,8 +191,6 @@ public class Portfolio
                 sellingQuantity -= assetQuantity;
             }
         }
-        
-        Navigation.GetSoldAssetResponse(quantitySold, assetSymbol, assetEarning);
     }
     
     internal void ReduceAssetQuantity(Asset asset, int quantity)

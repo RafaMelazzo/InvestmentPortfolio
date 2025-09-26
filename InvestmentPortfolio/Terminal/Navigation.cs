@@ -98,6 +98,10 @@ public abstract class Navigation
         try
         {
             portfolio.BuyAsset(asset, quantity);
+            GetBoughtAssetResponse(
+                quantity,
+                asset.Symbol,
+                Helpers.Helper.DoubleToCurrency(asset.CurrentPrice * quantity));
         }
         catch (PortfolioException e)
         {
@@ -158,6 +162,10 @@ public abstract class Navigation
         try
         {
             portfolio.SellAsset(assets, quantity);
+            GetSoldAssetResponse(
+                quantity,
+                assetSymbol,
+                Helpers.Helper.DoubleToCurrency(assets.First().CurrentPrice * quantity));
         }
         catch (PortfolioException e)
         {
