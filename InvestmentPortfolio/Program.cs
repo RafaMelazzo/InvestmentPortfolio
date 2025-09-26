@@ -9,11 +9,12 @@ var portfolio = new Portfolio(
         "Tony Stark",
         "35374527215", // Random valid CPF for testing purposes
         "tony@starkindustries.com"
-    )
+    ),
+    new Wallet(15213993.22)
 );
 AddSampleDataToPortfolio();
 
-Terminal.WelcomeScreen(portfolio);
+Navigation.WelcomeScreen(portfolio);
 return;
 
 void AddSampleDataToPortfolio()
@@ -83,28 +84,28 @@ void AddSampleDataToPortfolio()
 
         try
         {
-            portfolio.AddAsset(asset, quantity, paidPrice, purchaseDate);
+            portfolio.BuyAsset(asset, quantity, paidPrice, purchaseDate);
         }
         catch (PortfolioException e)
         {
-            TerminalHelper.ShowError(e.Message);
+            Helper.ShowError(e.Message);
         }
         catch (Exception)
         {
-            TerminalHelper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
+            Helper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
         }
     }
     
     try
     {
-        portfolio.AddAsset(StockMarket.GetAssetBySymbol("STNE")!, 7);
+        portfolio.BuyAsset(StockMarket.GetAssetBySymbol("STNE")!, 7);
     }
     catch (PortfolioException e)
     {
-        TerminalHelper.ShowError(e.Message);
+        Helper.ShowError(e.Message);
     }
     catch (Exception)
     {
-        TerminalHelper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
+        Helper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
     }
 }

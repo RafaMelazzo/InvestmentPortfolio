@@ -5,7 +5,7 @@ using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
 
 namespace InvestmentPortfolio.Terminal;
 
-public abstract class Terminal
+public abstract class Navigation
 {
     private const int TableDelay = 120;
 
@@ -43,7 +43,7 @@ public abstract class Terminal
                     ExitProgram();
                     return;
                 default:
-                    TerminalHelper.ShowError($"Opção \"{option}\" inválida.");
+                    Helper.ShowError($"Opção \"{option}\" inválida.");
                     break;
             }
         } while (option != "99");
@@ -56,7 +56,7 @@ public abstract class Terminal
         GetAccountInfo(portfolio);
         GetAssetsTable(portfolio);
         
-        TerminalHelper.BackToStart();
+        Helper.BackToStart();
     }
 
     private static void BuyAssetInPortfolio(Portfolio portfolio)
@@ -73,14 +73,14 @@ public abstract class Terminal
         
         if (!StockMarket.AssetExists(assetSymbol))
         {
-            TerminalHelper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado no mercado de ações.");
+            Helper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado no mercado de ações.");
             return;
         }
         
         var asset = StockMarket.GetAssetBySymbol(assetSymbol);
         if (asset == null)
         {
-            TerminalHelper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado.");
+            Helper.ShowError($"Ativo com o símbolo \"{assetSymbol}\" não encontrado.");
             return;
         }
         
@@ -97,18 +97,18 @@ public abstract class Terminal
 
         try
         {
-            portfolio.AddAsset(asset, quantity);
+            portfolio.BuyAsset(asset, quantity);
         }
         catch (PortfolioException e)
         {
-            TerminalHelper.ShowError(e.Message);
+            Helper.ShowError(e.Message);
         }
         catch (Exception)
         {
-            TerminalHelper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
+            Helper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
         }
         
-        TerminalHelper.BackToStart();
+        Helper.BackToStart();
     }
 
     private static void SellAssetFromPortfolio(Portfolio portfolio)
@@ -161,14 +161,14 @@ public abstract class Terminal
         }
         catch (PortfolioException e)
         {
-            TerminalHelper.ShowError(e.Message);
+            Helper.ShowError(e.Message);
         }
         catch (Exception)
         {
-            TerminalHelper.ShowError("Ocorreu um erro inesperado ao vender o ativo.");
+            Helper.ShowError("Ocorreu um erro inesperado ao vender o ativo.");
         }
         
-        TerminalHelper.BackToStart();
+        Helper.BackToStart();
     }
 
     private static void ExitProgram()
@@ -234,12 +234,12 @@ public abstract class Terminal
                            $"\n[bold blue]{portfolio.Person.DocumentType}:[/] " +
                            $"{portfolio.Person.GetFormatedDocument(portfolio.Person.Document)}" +
                            $"\n[bold blue]E-mail:[/] {portfolio.Person.Email}" +
+                           "\n[bold blue]Saldo em Conta:[/] " +
+                           $"{Helpers.Helper.DoubleToCurrency(portfolio.Wallet.Balance)}" +
                            
                            $"\n\n[bold blue]Quantidade de Ativos:[/] {portfolio.Assets.Count}" +
                            "\n[bold blue]Saldo Total de Ativos:[/] " +
-                           $"{Helpers.Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}" +
-                           "\n[bold blue]Saldo da Carteira:[/] " +
-                           $"{Helpers.Helper.DoubleToCurrency(portfolio.WalletBalance)}\n");
+                           $"{Helpers.Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}\n");
     }
     
     public static void GetBoughtAssetResponse(int quantityAdded, string assetSymbol, string assetsCost)
@@ -282,7 +282,7 @@ public abstract class Terminal
             case <0:
                 throw new ArgumentException("Asset list cannot be null or empty.");
             case 0:
-                TerminalHelper.ShowError("Nenhum ativo encontrado.");
+                Helper.ShowError("Nenhum ativo encontrado.");
                 return;
             case 1:
                 PrintPortfolioAssetDetails(assets.First());
@@ -364,7 +364,7 @@ public abstract class Terminal
                 assetsTable.Columns[7]
                     .Width(28).NoWrap();
                 assetsTable.Columns[1]
-                    .Width(TerminalHelper.GetDynamicColumnWidth(assetsTable, 1)).NoWrap();
+                    .Width(Helper.GetDynamicColumnWidth(assetsTable, 1)).NoWrap();
                 
                 ctx.Refresh();
                 Thread.Sleep(TableDelay);

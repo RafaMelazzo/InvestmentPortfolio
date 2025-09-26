@@ -367,13 +367,13 @@ public class PortfolioTests
 
         // Act
         if (quantity.HasValue && paidPrice.HasValue && purchaseDate.HasValue)
-            portfolio.AddAsset(asset, quantity.Value, paidPrice.Value, purchaseDate.Value);
+            portfolio.BuyAsset(asset, quantity.Value, paidPrice.Value, purchaseDate.Value);
         else if (quantity.HasValue && paidPrice.HasValue)
-            portfolio.AddAsset(asset, quantity.Value, paidPrice.Value);
+            portfolio.BuyAsset(asset, quantity.Value, paidPrice.Value);
         else if (quantity.HasValue)
-            portfolio.AddAsset(asset, quantity.Value);
+            portfolio.BuyAsset(asset, quantity.Value);
         else
-            portfolio.AddAsset(asset);
+            portfolio.BuyAsset(asset);
         
         // Assert
         var portfolioAsset = portfolio.GetAssetBySymbol("STNE")!;
@@ -399,7 +399,7 @@ public class PortfolioTests
         portfolio.Assets.Add(asset);
 
         // Act
-        portfolio.AddAsset(asset, 8);
+        portfolio.BuyAsset(asset, 8);
 
         // Assert
         var assets = portfolio.GetAssetBySymbol("STNE")!;
@@ -420,7 +420,7 @@ public class PortfolioTests
         portfolio.Assets.Add(asset);
 
         // Act
-        portfolio.AddAsset(asset, 8, 14);
+        portfolio.BuyAsset(asset, 8, 14);
 
         // Assert
         var assets = portfolio.GetAllAssetsWithSameSymbol("STNE")!;
@@ -438,7 +438,7 @@ public class PortfolioTests
         var portfolio = new Portfolio("Test Portfolio", "353.745.272-15");
 
         // Act
-        void Action() => portfolio.AddAsset(null!);
+        void Action() => portfolio.BuyAsset(null!);
 
         // Assert
         var exception = Assert.Throws<ArgumentNullException>(Action);
@@ -462,7 +462,7 @@ public class PortfolioTests
             DateTime.Today);
 
         // Act
-        void Action() => portfolio.AddAsset(asset, invalidQuantity);
+        void Action() => portfolio.BuyAsset(asset, invalidQuantity);
 
         // Assert
         var exception = Assert.Throws<ArgumentOutOfRangeException>(Action);
@@ -484,7 +484,7 @@ public class PortfolioTests
             DateTime.Today);
 
         // Act
-        void Action() => portfolio.AddAsset(asset, 1, -10.0);
+        void Action() => portfolio.BuyAsset(asset, 1, -10.0);
 
         // Assert
         var exception = Assert.Throws<ArgumentOutOfRangeException>(Action);
@@ -506,7 +506,7 @@ public class PortfolioTests
             DateTime.Today);
 
         // Act
-        void Action() => portfolio.AddAsset(asset);
+        void Action() => portfolio.BuyAsset(asset);
 
         // Assert
         var exception = Assert.Throws<ValidationException>(Action);

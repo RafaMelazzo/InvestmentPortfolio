@@ -8,21 +8,21 @@ using InvalidOperationException = InvestmentPortfolio.Exceptions.InvalidOperatio
 
 namespace InvestmentPortfolio.Services;
 
-public partial class Portfolio
+public class Portfolio
 {
     public Portfolio(
         Person person,
-        double walletBalance = 0,
+        Wallet wallet,
         List<Asset>? assets = null)
     {
         Person = person;
-        WalletBalance = walletBalance;
+        Wallet = wallet;
         Assets = assets ?? [];
     }
     
     public Person Person { get; }
     public List<Asset> Assets { get; }
-    public double WalletBalance { get; private set; }
+    public Wallet Wallet { get; }
     
     public int GetAssetsTotalQuantity() => Assets.Sum(a => a.Quantity);
     public double GetAssetsTotalPaidValue() => Assets.Sum(a => a.PaidPrice * a.Quantity);
@@ -48,7 +48,7 @@ public partial class Portfolio
 
     /// <summary>
     ///  Returns a list of all assets with the same symbol, ordered by the specified property.
-    ///  If the property does not exist, it defaults to ordering by PaidPrice.
+    ///  If the property does not exist, it defaults to ordering by `PaidPrice`.
     ///  If no assets with the specified symbol are found, it returns an empty list.
     /// </summary>
     /// <param name="symbol">The symbol of the assets to search for.</param>
@@ -76,7 +76,7 @@ public partial class Portfolio
             .ToList();
     }
 
-    public void AddAsset(Asset asset, int quantity = 1, double paidValue = 0, DateTime purchaseDate = default)
+    public void BuyAsset(Asset asset, int quantity = 1, double paidValue = 0, DateTime purchaseDate = default)
     {
         if (asset == null)
             throw new ArgumentNullException("Asset cannot be null.");
@@ -112,11 +112,11 @@ public partial class Portfolio
             }
             catch (PortfolioException e)
             {
-                TerminalHelper.ShowError(e.Message);
+                Helper.ShowError(e.Message);
             }
             catch (Exception)
             {
-                TerminalHelper.ShowError("Ocorreu um erro inesperado ao buscar todos ativos com o mesmo símbolo.");
+                Helper.ShowError("Ocorreu um erro inesperado ao buscar todos ativos com o mesmo símbolo.");
             }
         }
 
@@ -127,17 +127,18 @@ public partial class Portfolio
             try
             {
                 Asset.AddQuantityToAsset(asset, quantity);
+                Wallet.Withdraw(paidValue * quantity);
             }
             catch (PortfolioException e)
             {
-                TerminalHelper.ShowError(e.Message);
+                Helper.ShowError(e.Message);
             }
             catch (Exception)
             {
-                TerminalHelper.ShowError("Ocorreu um erro inesperado ao aumentar a quantidade de um ativo existente.");
+                Helper.ShowError("Ocorreu um erro inesperado ao aumentar a quantidade de um ativo existente.");
             }
             
-            Terminal.Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
+            Navigation.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
             return;
         }
 
@@ -152,7 +153,8 @@ public partial class Portfolio
         );
         
         Assets.Add(newAsset);
-        Terminal.Terminal.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
+        Wallet.Withdraw(paidValue * quantity);
+        Navigation.GetBoughtAssetResponse(quantity, asset.Symbol, assetsCost);
     }
 
     public void SellAsset(List<Asset> assets, int sellingQuantity = 1)
@@ -182,22 +184,23 @@ public partial class Portfolio
             foreach (var asset in assets)
             {
                 var assetQuantity = asset.Quantity;
+                var pricePaid = asset.CurrentPrice * assetQuantity;
 
                 if (assetQuantity >= sellingQuantity)
                 {
                     ReduceAssetQuantity(asset, sellingQuantity);
-                    WalletBalance += asset.CurrentPrice * assetQuantity;
+                    Wallet.Deposit(pricePaid);
                     sellingQuantity = 0;
                     break;
                 }
                 
                 ReduceAssetQuantity(asset, assetQuantity);
-                WalletBalance += asset.CurrentPrice * asset.Quantity;
+                Wallet.Deposit(pricePaid);
                 sellingQuantity -= assetQuantity;
             }
         }
         
-        Terminal.Terminal.GetSoldAssetResponse(quantitySold, assetSymbol, assetEarning);
+        Navigation.GetSoldAssetResponse(quantitySold, assetSymbol, assetEarning);
     }
     
     internal void ReduceAssetQuantity(Asset asset, int quantity)
@@ -219,11 +222,11 @@ public partial class Portfolio
         }
         catch (PortfolioException e)
         {
-            TerminalHelper.ShowError(e.Message);
+            Helper.ShowError(e.Message);
         }
         catch (Exception)
         {
-            TerminalHelper.ShowError("Ocorreu um erro inesperado ao reduzir a quantidade do ativo.");
+            Helper.ShowError("Ocorreu um erro inesperado ao reduzir a quantidade do ativo.");
         }
         
         if (existingAsset.Quantity <= 0)

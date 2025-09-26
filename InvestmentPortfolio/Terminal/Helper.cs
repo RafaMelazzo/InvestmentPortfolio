@@ -2,7 +2,7 @@ using Spectre.Console;
 
 namespace InvestmentPortfolio.Terminal;
 
-public static class TerminalHelper
+public static class Helper
 {
     
     /// <summary>Clears the console and waits for a key press to return to the start</summary>
