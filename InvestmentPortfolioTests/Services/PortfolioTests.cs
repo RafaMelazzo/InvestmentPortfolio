@@ -1,10 +1,13 @@
 using InvestmentPortfolio;
-using ArgumentException = InvestmentPortfolio.ArgumentException;
-using ArgumentNullException = InvestmentPortfolio.ArgumentNullException;
-using ArgumentOutOfRangeException = InvestmentPortfolio.ArgumentOutOfRangeException;
-using InvalidOperationException = InvestmentPortfolio.InvalidOperationException;
+using InvestmentPortfolio.Exceptions;
+using InvestmentPortfolio.Services;
+using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
+using ArgumentNullException = InvestmentPortfolio.Exceptions.ArgumentNullException;
+using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
+using Helper = InvestmentPortfolio.Helpers.Helper;
+using InvalidOperationException = InvestmentPortfolio.Exceptions.InvalidOperationException;
 
-namespace InvestmentPortfolioTests;
+namespace InvestmentPortfolioTests.Services;
 
 public class PortfolioTests
 {

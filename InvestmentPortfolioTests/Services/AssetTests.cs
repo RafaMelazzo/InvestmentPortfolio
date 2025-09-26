@@ -1,8 +1,9 @@
-﻿using InvestmentPortfolio;
-using ArgumentException = InvestmentPortfolio.ArgumentException;
-using ArgumentOutOfRangeException = InvestmentPortfolio.ArgumentOutOfRangeException;
+﻿using InvestmentPortfolio.Exceptions;
+using InvestmentPortfolio.Services;
+using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
+using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
 
-namespace InvestmentPortfolioTests;
+namespace InvestmentPortfolioTests.Services;
 
 public class AssetTests
 {

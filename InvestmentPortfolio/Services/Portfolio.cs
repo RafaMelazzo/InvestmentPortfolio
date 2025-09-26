@@ -1,8 +1,12 @@
-using System.Text.RegularExpressions;
+using InvestmentPortfolio.Exceptions;
 using InvestmentPortfolio.Models;
 using InvestmentPortfolio.Terminal;
+using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
+using ArgumentNullException = InvestmentPortfolio.Exceptions.ArgumentNullException;
+using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
+using InvalidOperationException = InvestmentPortfolio.Exceptions.InvalidOperationException;
 
-namespace InvestmentPortfolio;
+namespace InvestmentPortfolio.Services;
 
 public partial class Portfolio
 {
@@ -36,7 +40,7 @@ public partial class Portfolio
         
         var asset = Assets.FirstOrDefault(
             a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)
-                      && Helper.NearlyEqualDouble(a.PaidPrice, paidValue)
+                      && Helpers.Helper.NearlyEqualDouble(a.PaidPrice, paidValue)
         );
         
         return asset ?? null;
@@ -97,7 +101,7 @@ public partial class Portfolio
             throw new ValidationException($"Ativo com o símbolo \"{asset.Symbol}\" não encontrado no mercado." );
         
         var portfolioHasAsset = HasAsset(asset.Symbol);
-        var assetsCost = Helper.DoubleToCurrency(paidValue * quantity);
+        var assetsCost = Helpers.Helper.DoubleToCurrency(paidValue * quantity);
         
         List<Asset> existingAssets = [];
         if (portfolioHasAsset)
@@ -116,9 +120,9 @@ public partial class Portfolio
             }
         }
 
-        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helper.NearlyEqualDouble(a.PaidPrice, paidValue)))
+        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helpers.Helper.NearlyEqualDouble(a.PaidPrice, paidValue)))
         {
-            asset = existingAssets.First(a => Helper.NearlyEqualDouble(a.PaidPrice, paidValue));
+            asset = existingAssets.First(a => Helpers.Helper.NearlyEqualDouble(a.PaidPrice, paidValue));
 
             try
             {
@@ -170,7 +174,7 @@ public partial class Portfolio
         
         var firstAsset = assets.First();
         var assetSymbol = firstAsset.Symbol;
-        var assetEarning = Helper.DoubleToCurrency(firstAsset.CurrentPrice * sellingQuantity);
+        var assetEarning = Helpers.Helper.DoubleToCurrency(firstAsset.CurrentPrice * sellingQuantity);
         var quantitySold = sellingQuantity;
 
         while (sellingQuantity > 0 && assets.Count > 0)

@@ -1,4 +1,8 @@
-namespace InvestmentPortfolio;
+using InvestmentPortfolio.Exceptions;
+using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
+using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
+
+namespace InvestmentPortfolio.Services;
 
 public class Asset
 {

@@ -54,7 +54,7 @@ public class Person : IPerson
     
     internal static string GetUnformattedDocument(string document)
     {
-        return Helper.AnyNonDigitRegex().Replace(document, "");
+        return Helpers.Helper.AnyNonDigitRegex().Replace(document, "");
     }
 
     internal static bool ValidateCpf(string cpf)

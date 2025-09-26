@@ -1,4 +1,7 @@
+using InvestmentPortfolio.Exceptions;
+using InvestmentPortfolio.Services;
 using Spectre.Console;
+using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
 
 namespace InvestmentPortfolio.Terminal;
 
@@ -190,8 +193,8 @@ public abstract class Terminal
         var color = GetProfitOrLossColor(asset);
         var arrow = GetProfitOrLossArrow(asset);
         var value = asset.IsProfit()
-            ? $"{Helper.DoubleToCurrency(asset.GetProfitOrLoss())} "
-            : $"-{Helper.DoubleToCurrency(-asset.GetProfitOrLoss())} ";
+            ? $"{Helpers.Helper.DoubleToCurrency(asset.GetProfitOrLoss())} "
+            : $"-{Helpers.Helper.DoubleToCurrency(-asset.GetProfitOrLoss())} ";
         var percentage = asset.IsProfit() 
             ? $"({(Math.Abs(asset.GetProfitOrLoss()) / asset.PaidPrice * 100):F2}%)" 
             : $"(-{(Math.Abs(asset.GetProfitOrLoss()) / asset.PaidPrice * 100):F2}%)";
@@ -205,7 +208,7 @@ public abstract class Terminal
         AnsiConsole.Markup($"\n[bold green]Ativo:[/] {asset.Symbol}");
         AnsiConsole.Markup($"\n[bold green]Nome:[/] {asset.Name}");
         AnsiConsole.Markup($"\n[bold green]Tipo:[/] {asset.Type}");
-        AnsiConsole.Markup($"\n[bold green]Valor:[/] {Helper.DoubleToCurrency(asset.CurrentPrice)}");
+        AnsiConsole.Markup($"\n[bold green]Valor:[/] {Helpers.Helper.DoubleToCurrency(asset.CurrentPrice)}");
         Console.WriteLine("\n");
     }
 
@@ -217,10 +220,10 @@ public abstract class Terminal
             asset.Type,
             asset.Quantity.ToString(),
             asset.PurchaseDate.ToString("dd/MM/yyyy"),
-            $"{Helper.DoubleToCurrency(asset.PaidPrice)}" +
-                $"\n({Helper.DoubleToCurrency(asset.PaidPrice * asset.Quantity)})",
-            $"{Helper.DoubleToCurrency(asset.CurrentPrice)}" +
-                $"\n({Helper.DoubleToCurrency(asset.CurrentPrice * asset.Quantity)})",
+            $"{Helpers.Helper.DoubleToCurrency(asset.PaidPrice)}" +
+                $"\n({Helpers.Helper.DoubleToCurrency(asset.PaidPrice * asset.Quantity)})",
+            $"{Helpers.Helper.DoubleToCurrency(asset.CurrentPrice)}" +
+                $"\n({Helpers.Helper.DoubleToCurrency(asset.CurrentPrice * asset.Quantity)})",
             GetProfitOrLossCompleteValue(asset)
         );
     }
@@ -234,9 +237,9 @@ public abstract class Terminal
                            
                            $"\n\n[bold blue]Quantidade de Ativos:[/] {portfolio.Assets.Count}" +
                            "\n[bold blue]Saldo Total de Ativos:[/] " +
-                           $"{Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}" +
+                           $"{Helpers.Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}" +
                            "\n[bold blue]Saldo da Carteira:[/] " +
-                           $"{Helper.DoubleToCurrency(portfolio.WalletBalance)}\n");
+                           $"{Helpers.Helper.DoubleToCurrency(portfolio.WalletBalance)}\n");
     }
     
     public static void GetBoughtAssetResponse(int quantityAdded, string assetSymbol, string assetsCost)
@@ -259,12 +262,12 @@ public abstract class Terminal
         AnsiConsole.Markup($"\n\n[bold blue]Ativo:[/] {asset.Symbol}");
         AnsiConsole.Markup($"\n[bold blue]Nome:[/] {asset.Name}");
         AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {asset.Type}");
-        AnsiConsole.Markup($"\n[bold blue]Valor de Venda:[/] {Helper.DoubleToCurrency(asset.CurrentPrice)}");
+        AnsiConsole.Markup($"\n[bold blue]Valor de Venda:[/] {Helpers.Helper.DoubleToCurrency(asset.CurrentPrice)}");
         
         AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
         AnsiConsole.Markup($"\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
         AnsiConsole.Markup(
-            $"\n[bold blue]Valor Pago na Compra:[/] {Helper.DoubleToCurrency(asset.PaidPrice)}");
+            $"\n[bold blue]Valor Pago na Compra:[/] {Helpers.Helper.DoubleToCurrency(asset.PaidPrice)}");
         AnsiConsole.Markup(
             $"\n[bold blue]Lucro/Prejuízo:[/] " +
             $"{GetProfitOrLossCompleteValue(asset)}");
@@ -291,13 +294,13 @@ public abstract class Terminal
                 AnsiConsole.Markup($"\n[bold blue]Nome:[/] {firstAsset.Name}");
                 AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {firstAsset.Type}");
                 AnsiConsole.Markup(
-                    $"\n[bold blue]Valor de Venda:[/] {Helper.DoubleToCurrency(firstAsset.CurrentPrice)}");
+                    $"\n[bold blue]Valor de Venda:[/] {Helpers.Helper.DoubleToCurrency(firstAsset.CurrentPrice)}");
                 
                 foreach (var asset in assets)
                 {
                     AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
                     AnsiConsole.Markup(
-                        $"\n[bold blue]Valor Pago na Compra:[/] {Helper.DoubleToCurrency(asset.PaidPrice)}");
+                        $"\n[bold blue]Valor Pago na Compra:[/] {Helpers.Helper.DoubleToCurrency(asset.PaidPrice)}");
                     AnsiConsole.Markup($"\n[bold blue]Quantidade:[/] {asset.Quantity}");
                     AnsiConsole.Markup(
                         $"\n[bold blue]Lucro/Prejuízo:[/] " +
@@ -354,10 +357,10 @@ public abstract class Terminal
                     .Width(15).NoWrap();
                 assetsTable.Columns[5]
                     .Width(14).NoWrap().RightAligned()
-                    .Footer($"[bold blue]{Helper.DoubleToCurrency(portfolio.GetAssetsTotalPaidValue())}[/]");
+                    .Footer($"[bold blue]{Helpers.Helper.DoubleToCurrency(portfolio.GetAssetsTotalPaidValue())}[/]");
                 assetsTable.Columns[6]
                     .Width(14).NoWrap().RightAligned()
-                    .Footer($"[bold blue]{Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}[/]");
+                    .Footer($"[bold blue]{Helpers.Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}[/]");
                 assetsTable.Columns[7]
                     .Width(28).NoWrap();
                 assetsTable.Columns[1]

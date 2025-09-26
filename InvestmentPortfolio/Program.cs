@@ -1,5 +1,7 @@
 ﻿using InvestmentPortfolio;
+using InvestmentPortfolio.Exceptions;
 using InvestmentPortfolio.Models;
+using InvestmentPortfolio.Services;
 using InvestmentPortfolio.Terminal;
 
 var portfolio = new Portfolio(

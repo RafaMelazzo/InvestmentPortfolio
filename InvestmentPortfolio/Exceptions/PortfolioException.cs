@@ -1,4 +1,4 @@
-namespace InvestmentPortfolio;
+namespace InvestmentPortfolio.Exceptions;
 
 public class PortfolioException(string message) : Exception(message);
 public class ArgumentException(string message) : PortfolioException(message);

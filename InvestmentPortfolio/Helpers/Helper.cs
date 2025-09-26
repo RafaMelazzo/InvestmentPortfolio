@@ -1,8 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Spectre.Console;
 
-namespace InvestmentPortfolio;
+namespace InvestmentPortfolio.Helpers;
 
 public static partial class Helper
 {

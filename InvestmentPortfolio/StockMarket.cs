@@ -1,3 +1,6 @@
+using InvestmentPortfolio.Services;
+using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
+
 namespace InvestmentPortfolio;
 
 public abstract class StockMarket
