@@ -7,7 +7,7 @@ namespace InvestmentPortfolio.Terminal;
 
 public abstract class Navigation
 {
-    private const int TableDelay = 120;
+    private const int TableDelay = 60;
 
     public static void WelcomeScreen(Portfolio portfolio)
     {

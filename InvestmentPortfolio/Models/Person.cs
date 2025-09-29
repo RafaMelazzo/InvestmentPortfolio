@@ -9,7 +9,9 @@ public class Person : IPerson
     {
         Name = name;
         DocumentType = SetDocumentType(document);
-        Document = IsValidDocument(document) ? document : throw new ValidationException("Invalid document");
+        Document = IsValidDocument(document)
+            ? GetUnformattedDocument(document)
+            : throw new ValidationException("Invalid document");
         Email = email;
     }
 
