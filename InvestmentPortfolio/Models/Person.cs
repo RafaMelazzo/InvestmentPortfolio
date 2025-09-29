@@ -1,3 +1,4 @@
+using InvestmentPortfolio.Exceptions;
 using InvestmentPortfolio.Models.Interfaces;
 
 namespace InvestmentPortfolio.Models;
@@ -7,9 +8,9 @@ public class Person : IPerson
     public Person(string name, string document, string email)
     {
         Name = name;
-        Document = document;
-        Email = email;
         DocumentType = SetDocumentType(document);
+        Document = IsValidDocument(document) ? document : throw new ValidationException("Invalid document");
+        Email = email;
     }
 
     public string Name { get; }
@@ -55,6 +56,16 @@ public class Person : IPerson
     internal static string GetUnformattedDocument(string document)
     {
         return Helpers.Helper.AnyNonDigitRegex().Replace(document, "");
+    }
+
+    internal bool IsValidDocument(string document)
+    {
+        return DocumentType.ToUpper() switch
+        {
+            "CPF" => ValidateCpf(document),
+            "CNPJ" => ValidateCnpj(document),
+            _ => false
+        };
     }
 
     internal static bool ValidateCpf(string cpf)
@@ -129,6 +140,4 @@ public class Person : IPerson
 
         return secondCheckDigit == cnpjNumbers[13] - '0';
     }
-    
-    
 }
