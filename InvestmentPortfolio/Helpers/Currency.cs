@@ -1,13 +1,9 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace InvestmentPortfolio.Helpers;
 
-public static partial class Helper
+public static class Currency
 {
-    [GeneratedRegex(@"\D")]
-    internal static partial Regex AnyNonDigitRegex();
-    
     ///<summary>Checks if two double values are nearly equal within a given epsilon</summary>
     ///<param name="a">First value</param>
     ///<param name="b">Second value</param>

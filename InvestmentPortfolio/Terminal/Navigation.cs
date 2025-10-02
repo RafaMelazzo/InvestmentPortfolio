@@ -1,13 +1,175 @@
 using InvestmentPortfolio.Exceptions;
+using InvestmentPortfolio.Models;
 using InvestmentPortfolio.Services;
 using Spectre.Console;
 using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
+using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
 
 namespace InvestmentPortfolio.Terminal;
 
 public abstract class Navigation
 {
     private const int TableDelay = 60;
+    
+    public static void LoginScreen()
+    {
+        Console.Clear();
+        AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
+        AnsiConsole.MarkupLine("\n[bold blue]Bem-vindo![/]");
+        Console.WriteLine("Para começar, por favor, faça o login ou crie sua conta.");
+        
+        string option;
+        do
+        {
+            AnsiConsole.MarkupLine("\n[bold orange3]OPÇÕES:[/]");
+            AnsiConsole.MarkupLine("[bold blue] 1[/]: Login");
+            AnsiConsole.MarkupLine("[bold blue] 2[/]: Criar Conta");
+            AnsiConsole.MarkupLine("[bold blue]99[/]: Sair");
+            
+            Console.Write("\nDigite o número da opção desejada: ");
+            option = Console.ReadLine()!;
+            
+            switch (option)
+            {
+                case "1":
+                    Login();
+                    break;
+                case "2":
+                    CreateAccount();
+                    break;
+                case "99":
+                    ExitProgram();
+                    return;
+                default:
+                    Helper.ShowError($"Opção \"{option}\" inválida.");
+                    break;
+            }
+        } while (option != "99");
+    }
+
+    private static void Login()
+    {
+        Console.Clear();
+        AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
+        AnsiConsole.MarkupLine("\n[bold blue]Bem-vindo de volta![/]");
+        Console.WriteLine("Por favor, insira suas credenciais para fazer o login.");
+
+        var examplePortfolio = new Portfolio(
+            new Person(
+                "Tony Stark",
+                "35374527215", // Random valid CPF for testing purposes
+                "tony@starkindustries.com"
+            ),
+            new Wallet(15213993.22)
+        );
+        
+        var document = AnsiConsole.Prompt(
+            new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/gray]: ")
+                .PromptStyle("bold blue")
+                .Validate(d => string.IsNullOrWhiteSpace(d) && Person.IsValidDocument(d)
+                    ? ValidationResult.Error(
+                        "[red]O documento não pode estar vazio, e deve ser um documento válido.[/]")
+                    : ValidationResult.Success())
+        );
+        
+        var password = AnsiConsole.Prompt(
+            new TextPrompt<string>("E-mail: ")
+                .PromptStyle("bold blue")
+                .Validate(e => string.IsNullOrWhiteSpace(e) && Person.IsValidEmail(e)
+                    ? ValidationResult.Error("[red]O e-mail não pode estar vazio.[/]")
+                    : ValidationResult.Success())
+        );
+        
+        
+    }
+
+    private static void CreateAccount()
+    {
+        Console.Clear();
+        AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
+        AnsiConsole.MarkupLine("\n[bold blue]Seja bem-vindo![/]");
+        Console.WriteLine("Por favor, insira seus dados para criar a conta.");
+        
+        var name = AnsiConsole.Prompt(
+            new TextPrompt<string>("Nome: ")
+                .PromptStyle("bold blue")
+                .ValidationErrorMessage("[red]O nome não pode estar vazio.[/]")
+                .Validate(n => string.IsNullOrWhiteSpace(n)
+                    ? ValidationResult.Error("[red]O nome não pode estar vazio.[/]")
+                    : ValidationResult.Success())
+        );
+
+        var document = AnsiConsole.Prompt(
+            new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/gray]: ")
+                .PromptStyle("bold blue")
+                .Validate(d => string.IsNullOrWhiteSpace(d) && Person.IsValidDocument(d)
+                    ? ValidationResult.Error(
+                        "[red]O documento não pode estar vazio, e deve ser um documento válido.[/]")
+                    : ValidationResult.Success())
+        );
+        
+        var email = AnsiConsole.Prompt(
+            new TextPrompt<string>("E-mail: ")
+                .PromptStyle("bold blue")
+                .Validate(e => string.IsNullOrWhiteSpace(e) && Person.IsValidEmail(e)
+                    ? ValidationResult.Error("[red]O e-mail não pode estar vazio.[/]")
+                    : ValidationResult.Success())
+        );
+
+        var deposit = AnsiConsole.Prompt(
+            new TextPrompt<string>("Adicione fundos para comprar ações " +
+                                   "[gray]Deixe em branco para não adicionar no momento[/gray]: ")
+                .PromptStyle("bold blue")
+                .DefaultValue("0")
+        );
+        
+        double initialBalance;
+        try
+        {
+            initialBalance = string.IsNullOrWhiteSpace(deposit) ? 0 : Convert.ToDouble(deposit);
+            if (initialBalance < 0)
+                throw new ArgumentOutOfRangeException("Initial balance cannot be negative.");
+        }
+        catch (FormatException)
+        {
+            Helper.ShowError("Valor inválido para saldo inicial. Definindo saldo como R$0,00.");
+            initialBalance = 0;
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            Helper.ShowError(e.Message + " Definindo saldo como R$0,00.");
+            initialBalance = 0;
+        }
+        catch (Exception)
+        {
+            Helper.ShowError("Ocorreu um erro inesperado ao definir o saldo inicial. " +
+                             "Definindo saldo como R$0,00.");
+            initialBalance = 0;
+        }
+        
+        try
+        {
+            var person = new Person(name, document, email);
+            var wallet = new Wallet(initialBalance);
+            var portfolio = new Portfolio(person, wallet);
+        
+            AnsiConsole.MarkupLine("\n\n[green]Conta criada com sucesso![/green]");
+            Console.WriteLine("\n\nPressione qualquer tecla para para acessar o sistema.");
+            Console.ReadKey();
+        
+            WelcomeScreen(portfolio);
+        }
+        catch (ValidationException e)
+        {
+            Helper.ShowError(e.Message + "\n\nRetornando à tela de login.");
+            LoginScreen();
+        }
+        catch (Exception)
+        {
+            Helper.ShowError("Ocorreu um erro inesperado ao criar sua conta. Retornando à tela de login.");
+            LoginScreen();
+        }
+    }
 
     public static void WelcomeScreen(Portfolio portfolio)
     {
@@ -101,7 +263,7 @@ public abstract class Navigation
             GetBoughtAssetResponse(
                 quantity,
                 asset.Symbol,
-                Helpers.Helper.DoubleToCurrency(asset.CurrentPrice * quantity));
+                Helpers.Currency.DoubleToCurrency(asset.CurrentPrice * quantity));
         }
         catch (PortfolioException e)
         {
@@ -165,7 +327,7 @@ public abstract class Navigation
             GetSoldAssetResponse(
                 quantity,
                 assetSymbol,
-                Helpers.Helper.DoubleToCurrency(assets.First().CurrentPrice * quantity));
+                Helpers.Currency.DoubleToCurrency(assets.First().CurrentPrice * quantity));
         }
         catch (PortfolioException e)
         {
@@ -201,8 +363,8 @@ public abstract class Navigation
         var color = GetProfitOrLossColor(asset);
         var arrow = GetProfitOrLossArrow(asset);
         var value = asset.IsProfit()
-            ? $"{Helpers.Helper.DoubleToCurrency(asset.GetProfitOrLoss())} "
-            : $"-{Helpers.Helper.DoubleToCurrency(-asset.GetProfitOrLoss())} ";
+            ? $"{Helpers.Currency.DoubleToCurrency(asset.GetProfitOrLoss())} "
+            : $"-{Helpers.Currency.DoubleToCurrency(-asset.GetProfitOrLoss())} ";
         var percentage = asset.IsProfit() 
             ? $"({(Math.Abs(asset.GetProfitOrLoss()) / asset.PaidPrice * 100):F2}%)" 
             : $"(-{(Math.Abs(asset.GetProfitOrLoss()) / asset.PaidPrice * 100):F2}%)";
@@ -216,7 +378,7 @@ public abstract class Navigation
         AnsiConsole.Markup($"\n[bold green]Ativo:[/] {asset.Symbol}");
         AnsiConsole.Markup($"\n[bold green]Nome:[/] {asset.Name}");
         AnsiConsole.Markup($"\n[bold green]Tipo:[/] {asset.Type}");
-        AnsiConsole.Markup($"\n[bold green]Valor:[/] {Helpers.Helper.DoubleToCurrency(asset.CurrentPrice)}");
+        AnsiConsole.Markup($"\n[bold green]Valor:[/] {Helpers.Currency.DoubleToCurrency(asset.CurrentPrice)}");
         Console.WriteLine("\n");
     }
 
@@ -228,10 +390,10 @@ public abstract class Navigation
             asset.Type,
             asset.Quantity.ToString(),
             asset.PurchaseDate.ToString("dd/MM/yyyy"),
-            $"{Helpers.Helper.DoubleToCurrency(asset.PaidPrice)}" +
-                $"\n({Helpers.Helper.DoubleToCurrency(asset.PaidPrice * asset.Quantity)})",
-            $"{Helpers.Helper.DoubleToCurrency(asset.CurrentPrice)}" +
-                $"\n({Helpers.Helper.DoubleToCurrency(asset.CurrentPrice * asset.Quantity)})",
+            $"{Helpers.Currency.DoubleToCurrency(asset.PaidPrice)}" +
+                $"\n({Helpers.Currency.DoubleToCurrency(asset.PaidPrice * asset.Quantity)})",
+            $"{Helpers.Currency.DoubleToCurrency(asset.CurrentPrice)}" +
+                $"\n({Helpers.Currency.DoubleToCurrency(asset.CurrentPrice * asset.Quantity)})",
             GetProfitOrLossCompleteValue(asset)
         );
     }
@@ -243,11 +405,11 @@ public abstract class Navigation
                            $"{portfolio.Person.GetFormatedDocument(portfolio.Person.Document)}" +
                            $"\n[bold blue]E-mail:[/] {portfolio.Person.Email}" +
                            "\n[bold blue]Saldo em Conta:[/] " +
-                           $"{Helpers.Helper.DoubleToCurrency(portfolio.Wallet.Balance)}" +
+                           $"{Helpers.Currency.DoubleToCurrency(portfolio.Wallet.Balance)}" +
                            
                            $"\n\n[bold blue]Quantidade de Ativos:[/] {portfolio.Assets.Count}" +
                            "\n[bold blue]Saldo Total de Ativos:[/] " +
-                           $"{Helpers.Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}\n");
+                           $"{Helpers.Currency.DoubleToCurrency(portfolio.GetAssetsTotalValue())}\n");
     }
     
     public static void GetBoughtAssetResponse(int quantityAdded, string assetSymbol, string assetsCost)
@@ -270,12 +432,12 @@ public abstract class Navigation
         AnsiConsole.Markup($"\n\n[bold blue]Ativo:[/] {asset.Symbol}");
         AnsiConsole.Markup($"\n[bold blue]Nome:[/] {asset.Name}");
         AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {asset.Type}");
-        AnsiConsole.Markup($"\n[bold blue]Valor de Venda:[/] {Helpers.Helper.DoubleToCurrency(asset.CurrentPrice)}");
+        AnsiConsole.Markup($"\n[bold blue]Valor de Venda:[/] {Helpers.Currency.DoubleToCurrency(asset.CurrentPrice)}");
         
         AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
         AnsiConsole.Markup($"\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
         AnsiConsole.Markup(
-            $"\n[bold blue]Valor Pago na Compra:[/] {Helpers.Helper.DoubleToCurrency(asset.PaidPrice)}");
+            $"\n[bold blue]Valor Pago na Compra:[/] {Helpers.Currency.DoubleToCurrency(asset.PaidPrice)}");
         AnsiConsole.Markup(
             $"\n[bold blue]Lucro/Prejuízo:[/] " +
             $"{GetProfitOrLossCompleteValue(asset)}");
@@ -302,13 +464,13 @@ public abstract class Navigation
                 AnsiConsole.Markup($"\n[bold blue]Nome:[/] {firstAsset.Name}");
                 AnsiConsole.Markup($"\n[bold blue]Tipo:[/] {firstAsset.Type}");
                 AnsiConsole.Markup(
-                    $"\n[bold blue]Valor de Venda:[/] {Helpers.Helper.DoubleToCurrency(firstAsset.CurrentPrice)}");
+                    $"\n[bold blue]Valor de Venda:[/] {Helpers.Currency.DoubleToCurrency(firstAsset.CurrentPrice)}");
                 
                 foreach (var asset in assets)
                 {
                     AnsiConsole.Markup($"\n\n[bold blue]Data da Compra:[/] {asset.PurchaseDate:dd/MM/yyyy}");
                     AnsiConsole.Markup(
-                        $"\n[bold blue]Valor Pago na Compra:[/] {Helpers.Helper.DoubleToCurrency(asset.PaidPrice)}");
+                        $"\n[bold blue]Valor Pago na Compra:[/] {Helpers.Currency.DoubleToCurrency(asset.PaidPrice)}");
                     AnsiConsole.Markup($"\n[bold blue]Quantidade:[/] {asset.Quantity}");
                     AnsiConsole.Markup(
                         $"\n[bold blue]Lucro/Prejuízo:[/] " +
@@ -365,10 +527,10 @@ public abstract class Navigation
                     .Width(15).NoWrap();
                 assetsTable.Columns[5]
                     .Width(14).NoWrap().RightAligned()
-                    .Footer($"[bold blue]{Helpers.Helper.DoubleToCurrency(portfolio.GetAssetsTotalPaidValue())}[/]");
+                    .Footer($"[bold blue]{Helpers.Currency.DoubleToCurrency(portfolio.GetAssetsTotalPaidValue())}[/]");
                 assetsTable.Columns[6]
                     .Width(14).NoWrap().RightAligned()
-                    .Footer($"[bold blue]{Helpers.Helper.DoubleToCurrency(portfolio.GetAssetsTotalValue())}[/]");
+                    .Footer($"[bold blue]{Helpers.Currency.DoubleToCurrency(portfolio.GetAssetsTotalValue())}[/]");
                 assetsTable.Columns[7]
                     .Width(28).NoWrap();
                 assetsTable.Columns[1]

@@ -40,7 +40,7 @@ public class Portfolio
         
         var asset = Assets.FirstOrDefault(
             a => a.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)
-                      && Helpers.Helper.NearlyEqualDouble(a.PaidPrice, paidValue)
+                      && Helpers.Currency.NearlyEqualDouble(a.PaidPrice, paidValue)
         );
         
         return asset ?? null;
@@ -119,9 +119,9 @@ public class Portfolio
             }
         }
 
-        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helpers.Helper.NearlyEqualDouble(a.PaidPrice, paidValue)))
+        if (existingAssets.Count > 0 && existingAssets.Exists(a => Helpers.Currency.NearlyEqualDouble(a.PaidPrice, paidValue)))
         {
-            asset = existingAssets.First(a => Helpers.Helper.NearlyEqualDouble(a.PaidPrice, paidValue));
+            asset = existingAssets.First(a => Helpers.Currency.NearlyEqualDouble(a.PaidPrice, paidValue));
 
             try
             {

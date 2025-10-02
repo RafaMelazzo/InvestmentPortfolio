@@ -8,11 +8,13 @@ public class Person : IPerson
     public Person(string name, string document, string email)
     {
         Name = name;
-        DocumentType = SetDocumentType(document);
         Document = IsValidDocument(document)
             ? GetUnformattedDocument(document)
             : throw new ValidationException("Invalid document");
-        Email = email;
+        DocumentType = SetDocumentType(document);
+        Email = IsValidEmail(email)
+            ? email
+            : throw new ValidationException("Invalid email");
     }
 
     public string Name { get; }
@@ -21,6 +23,16 @@ public class Person : IPerson
     public string Email { get; }
     
     public string GetFirstName() => Name.Split(' ')[0];
+    
+    internal static string GetDocumentTypeByDocument(string document)
+    {
+        return GetUnformattedDocument(document).Length switch
+        {
+            11 => "CPF",
+            14 => "CNPJ",
+            _ => throw new ValidationException("Invalid document")
+        };
+    }
 
     internal string SetDocumentType(string document)
     {
@@ -28,7 +40,7 @@ public class Person : IPerson
         {
             11 => "CPF",
             14 => "CNPJ",
-            _ => "Unknown"
+            _ => throw new ValidationException("Invalid document")
         };
         return DocumentType;
     }
@@ -57,12 +69,12 @@ public class Person : IPerson
     
     internal static string GetUnformattedDocument(string document)
     {
-        return Helpers.Helper.AnyNonDigitRegex().Replace(document, "");
+        return Helpers.CustomRegex.AnyNonDigitRegex().Replace(document, "");
     }
 
-    internal bool IsValidDocument(string document)
+    internal static bool IsValidDocument(string document)
     {
-        return DocumentType.ToUpper() switch
+        return GetDocumentTypeByDocument(document).ToUpper() switch
         {
             "CPF" => ValidateCpf(document),
             "CNPJ" => ValidateCnpj(document),
@@ -141,5 +153,21 @@ public class Person : IPerson
         secondCheckDigit = secondCheckDigit < 2 ? 0 : 11 - secondCheckDigit;
 
         return secondCheckDigit == cnpjNumbers[13] - '0';
+    }
+    
+    internal static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

@@ -1,10 +1,11 @@
 using InvestmentPortfolio.Exceptions;
+using InvestmentPortfolio.Services.Interfaces;
 using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
 using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
 
 namespace InvestmentPortfolio.Services;
 
-public class Asset
+public class Asset : IAsset
 {
     public Asset(
         string symbol,

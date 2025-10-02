@@ -1,10 +1,10 @@
 using InvestmentPortfolio;
 using InvestmentPortfolio.Exceptions;
+using InvestmentPortfolio.Helpers;
 using InvestmentPortfolio.Services;
 using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
 using ArgumentNullException = InvestmentPortfolio.Exceptions.ArgumentNullException;
 using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
-using Helper = InvestmentPortfolio.Helpers.Helper;
 using InvalidOperationException = InvestmentPortfolio.Exceptions.InvalidOperationException;
 
 namespace InvestmentPortfolioTests.Services;
@@ -425,10 +425,10 @@ public class PortfolioTests
         // Assert
         var assets = portfolio.GetAllAssetsWithSameSymbol("STNE")!;
         Assert.Equal(2, assets.Count);
-        Assert.Contains(assets, a => Helper.NearlyEqualDouble(a.PaidPrice, 12.0));
-        Assert.Contains(assets, a => Helper.NearlyEqualDouble(a.PaidPrice, 14.0));
-        Assert.Equal(5, assets.First(a => Helper.NearlyEqualDouble(a.PaidPrice, 12.0)).Quantity);
-        Assert.Equal(8, assets.First(a => Helper.NearlyEqualDouble(a.PaidPrice, 14.0)).Quantity);
+        Assert.Contains(assets, a => Currency.NearlyEqualDouble(a.PaidPrice, 12.0));
+        Assert.Contains(assets, a => Currency.NearlyEqualDouble(a.PaidPrice, 14.0));
+        Assert.Equal(5, assets.First(a => Currency.NearlyEqualDouble(a.PaidPrice, 12.0)).Quantity);
+        Assert.Equal(8, assets.First(a => Currency.NearlyEqualDouble(a.PaidPrice, 14.0)).Quantity);
     }
 
     [Fact]
