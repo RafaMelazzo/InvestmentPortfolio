@@ -4,17 +4,20 @@ using InvestmentPortfolio.Models;
 using InvestmentPortfolio.Services;
 using InvestmentPortfolio.Terminal;
 
-var portfolio = new Portfolio(
-    new Person(
-        "Tony Stark",
-        "35374527215", // Random valid CPF for testing purposes
-        "tony@starkindustries.com"
+var examplePortfolio = new Portfolio(
+    new User(
+        new Person(
+            "Tony Stark",
+            "35374527215", // Random valid CPF for testing purposes
+            "tony@starkindustries.com"
+        ),
+        "ImIronMan@2025"
     ),
     new Wallet(15213993.22)
 );
 AddSampleDataToPortfolio();
 
-Navigation.WelcomeScreen(portfolio);
+Navigation.WelcomeScreen(examplePortfolio);
 return;
 
 void AddSampleDataToPortfolio()
@@ -84,7 +87,7 @@ void AddSampleDataToPortfolio()
 
         try
         {
-            portfolio.BuyAsset(asset, quantity, paidPrice, purchaseDate);
+            examplePortfolio.BuyAsset(asset, quantity, paidPrice, purchaseDate);
         }
         catch (PortfolioException e)
         {
@@ -98,7 +101,7 @@ void AddSampleDataToPortfolio()
     
     try
     {
-        portfolio.BuyAsset(StockMarket.GetAssetBySymbol("STNE")!, 7);
+        examplePortfolio.BuyAsset(StockMarket.GetAssetBySymbol("STNE")!, 7);
     }
     catch (PortfolioException e)
     {

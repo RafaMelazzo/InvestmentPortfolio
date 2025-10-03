@@ -1,4 +1,3 @@
-using InvestmentPortfolio.Exceptions;
 using InvestmentPortfolio.Models.Enums;
 using InvestmentPortfolio.Models.Interfaces;
 using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
@@ -37,7 +36,7 @@ public class User : IUser
         Role = parsedRole;
     }
 
-    private static bool ValidatePassword(string password)
+    public static bool ValidatePassword(string password)
     {
         var hasLowerChar = Helpers.CustomRegex.AnyQuantityOfLowerChar();
         var hasUpperChar = Helpers.CustomRegex.AnyQuantityOfUpperChar();

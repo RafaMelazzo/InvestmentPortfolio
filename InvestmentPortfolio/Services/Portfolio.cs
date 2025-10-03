@@ -11,16 +11,16 @@ namespace InvestmentPortfolio.Services;
 public class Portfolio
 {
     public Portfolio(
-        Person person,
+        User user,
         Wallet wallet,
         List<Asset>? assets = null)
     {
-        Person = person;
+        User = user;
         Wallet = wallet;
         Assets = assets ?? [];
     }
     
-    public Person Person { get; }
+    public User User { get; }
     public List<Asset> Assets { get; }
     public Wallet Wallet { get; }
     

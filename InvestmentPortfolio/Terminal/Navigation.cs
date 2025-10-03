@@ -4,6 +4,7 @@ using InvestmentPortfolio.Services;
 using Spectre.Console;
 using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
 using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
+using FormatException = InvestmentPortfolio.Exceptions.FormatException;
 
 namespace InvestmentPortfolio.Terminal;
 
@@ -52,13 +53,19 @@ public abstract class Navigation
         Console.Clear();
         AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
         AnsiConsole.MarkupLine("\n[bold blue]Bem-vindo de volta![/]");
-        Console.WriteLine("Por favor, insira suas credenciais para fazer o login.");
+        Console.WriteLine("\n\nPor favor, insira suas credenciais para fazer o login.");
+        AnsiConsole.MarkupLine("\n[gray]Utilize os seguintes dados para teste:[/]" +
+                               "\n[bold gray]Documento:[/] [gray]353.745.272-15[/]" +
+                               "\n[bold gray]Senha:[/] [gray]I'mIronMan!2025[/]");
 
         var examplePortfolio = new Portfolio(
-            new Person(
-                "Tony Stark",
-                "35374527215", // Random valid CPF for testing purposes
-                "tony@starkindustries.com"
+            new User(
+                new Person(
+                    "Tony Stark",
+                    "35374527215", // Random valid CPF for testing purposes
+                    "tony@starkindustries.com"
+                ),
+                "I'mIronMan!2025" // Example password for testing purposes
             ),
             new Wallet(15213993.22)
         );
@@ -66,17 +73,19 @@ public abstract class Navigation
         var document = AnsiConsole.Prompt(
             new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/gray]: ")
                 .PromptStyle("bold blue")
-                .Validate(d => string.IsNullOrWhiteSpace(d) && Person.IsValidDocument(d)
+                .Validate(
+                    d => examplePortfolio.User.Person.Document != d
                     ? ValidationResult.Error(
-                        "[red]O documento não pode estar vazio, e deve ser um documento válido.[/]")
+                        "[red]Documento inválido ou não encontrado no sistema. Tente novamente.[/]")
                     : ValidationResult.Success())
         );
         
         var password = AnsiConsole.Prompt(
-            new TextPrompt<string>("E-mail: ")
+            new TextPrompt<string>("Senha: ")
+                .Secret()
                 .PromptStyle("bold blue")
-                .Validate(e => string.IsNullOrWhiteSpace(e) && Person.IsValidEmail(e)
-                    ? ValidationResult.Error("[red]O e-mail não pode estar vazio.[/]")
+                .Validate(s => examplePortfolio.User.Password != s
+                    ? ValidationResult.Error("[red]Senha incorreta. Tente novamente.[/]")
                     : ValidationResult.Success())
         );
         
@@ -93,7 +102,6 @@ public abstract class Navigation
         var name = AnsiConsole.Prompt(
             new TextPrompt<string>("Nome: ")
                 .PromptStyle("bold blue")
-                .ValidationErrorMessage("[red]O nome não pode estar vazio.[/]")
                 .Validate(n => string.IsNullOrWhiteSpace(n)
                     ? ValidationResult.Error("[red]O nome não pode estar vazio.[/]")
                     : ValidationResult.Success())
@@ -102,17 +110,28 @@ public abstract class Navigation
         var document = AnsiConsole.Prompt(
             new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/gray]: ")
                 .PromptStyle("bold blue")
-                .Validate(d => string.IsNullOrWhiteSpace(d) && Person.IsValidDocument(d)
+                .Validate(d => !Person.IsValidDocument(d)
                     ? ValidationResult.Error(
-                        "[red]O documento não pode estar vazio, e deve ser um documento válido.[/]")
+                        "[red]Documento inválido. Tente novamente[/]")
                     : ValidationResult.Success())
         );
         
         var email = AnsiConsole.Prompt(
             new TextPrompt<string>("E-mail: ")
                 .PromptStyle("bold blue")
-                .Validate(e => string.IsNullOrWhiteSpace(e) && Person.IsValidEmail(e)
-                    ? ValidationResult.Error("[red]O e-mail não pode estar vazio.[/]")
+                .Validate(e => !Person.IsValidEmail(e)
+                    ? ValidationResult.Error("[red]E-mail inválido. Tente novamente.[/]")
+                    : ValidationResult.Success())
+        );
+        
+        var password = AnsiConsole.Prompt(
+            new TextPrompt<string>("Senha: ")
+                .Secret()
+                .PromptStyle("bold blue")
+                .Validate(p => !User.ValidatePassword(p)
+                    ? ValidationResult.Error(
+                        "[red]A senha deve ter entre 8 e 15 caracteres, contendo letras minúsculas e maiúsculas, " +
+                        "além de números e caracteres especiais.[/]")
                     : ValidationResult.Success())
         );
 
@@ -130,43 +149,46 @@ public abstract class Navigation
             if (initialBalance < 0)
                 throw new ArgumentOutOfRangeException("Initial balance cannot be negative.");
         }
-        catch (FormatException)
+        catch (FormatException e)
         {
-            Helper.ShowError("Valor inválido para saldo inicial. Definindo saldo como R$0,00.");
+            Helper.ShowError(e.Message + " Definindo saldo inicial como \"R$ 0,00\".");
             initialBalance = 0;
         }
         catch (ArgumentOutOfRangeException e)
         {
-            Helper.ShowError(e.Message + " Definindo saldo como R$0,00.");
+            Helper.ShowError(e.Message + " Definindo saldo inicial como \"R$ 0,00\".");
             initialBalance = 0;
         }
         catch (Exception)
         {
             Helper.ShowError("Ocorreu um erro inesperado ao definir o saldo inicial. " +
-                             "Definindo saldo como R$0,00.");
+                             "Definindo saldo como \"R$ 0,00\".");
             initialBalance = 0;
         }
         
         try
         {
             var person = new Person(name, document, email);
+            var user = new User(person, password);
             var wallet = new Wallet(initialBalance);
-            var portfolio = new Portfolio(person, wallet);
+            var portfolio = new Portfolio(user, wallet);
         
             AnsiConsole.MarkupLine("\n\n[green]Conta criada com sucesso![/green]");
-            Console.WriteLine("\n\nPressione qualquer tecla para para acessar o sistema.");
+            Console.WriteLine("\n\nPressione qualquer tecla para acessar o sistema.");
             Console.ReadKey();
-        
             WelcomeScreen(portfolio);
         }
         catch (ValidationException e)
         {
-            Helper.ShowError(e.Message + "\n\nRetornando à tela de login.");
+            Helper.ShowError(e.Message + "\n\nPressione qualquer tecla para retornar à tela de login.");
+            Console.ReadKey();
             LoginScreen();
         }
         catch (Exception)
         {
-            Helper.ShowError("Ocorreu um erro inesperado ao criar sua conta. Retornando à tela de login.");
+            Helper.ShowError("Ocorreu um erro inesperado ao criar sua conta. Pressione qualquer tecla " +
+                             "para retornar à tela de login.");
+            Console.ReadKey();
             LoginScreen();
         }
     }
@@ -178,7 +200,7 @@ public abstract class Navigation
         {
             Console.Clear();
             AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
-            AnsiConsole.MarkupLine($"\nBem-vindo, [bold blue]{portfolio.Person.GetFirstName()}[/]!");
+            AnsiConsole.MarkupLine($"\nBem-vindo, [bold blue]{portfolio.User.Person.GetFirstName()}[/]!");
             Console.WriteLine("Para começar, selecione uma das opções abaixo.");
             
             AnsiConsole.MarkupLine("\n[bold orange3]OPÇÕES:[/]");
@@ -400,10 +422,10 @@ public abstract class Navigation
 
     private static void GetAccountInfo(Portfolio portfolio)
     {
-        AnsiConsole.Markup($"\n[bold blue]Nome:[/] {portfolio.Person.Name}" +
-                           $"\n[bold blue]{portfolio.Person.DocumentType}:[/] " +
-                           $"{portfolio.Person.GetFormatedDocument(portfolio.Person.Document)}" +
-                           $"\n[bold blue]E-mail:[/] {portfolio.Person.Email}" +
+        AnsiConsole.Markup($"\n[bold blue]Nome:[/] {portfolio.User.Person.Name}" +
+                           $"\n[bold blue]{portfolio.User.Person.DocumentType}:[/] " +
+                           $"{portfolio.User.Person.GetFormatedDocument(portfolio.User.Person.Document)}" +
+                           $"\n[bold blue]E-mail:[/] {portfolio.User.Person.Email}" +
                            "\n[bold blue]Saldo em Conta:[/] " +
                            $"{Helpers.Currency.DoubleToCurrency(portfolio.Wallet.Balance)}" +
                            
