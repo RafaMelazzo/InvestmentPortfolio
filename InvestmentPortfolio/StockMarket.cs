@@ -42,46 +42,75 @@ public abstract class StockMarket
                 20.42
             ),
             new Asset(
-                "LONGNAME",
-                "This is a very long asset name that should be truncated in the table",
+                "NVDA",
+                "NVIDIA Corporation",
                 "Ação",
-                120.00
+                275.50
             ),
             new Asset(
-                "VERYEXP",
-                "Very Expensive Asset",
+                "AMZN",
+                "Amazon.com Inc.",
                 "Ação",
-                1200000.00
+                3300.00
             ),
             new Asset(
-                "VERYNEG",
-                "Very Expensive Negative Asset",
+                "MSFT",
+                "Microsoft Corporation",
                 "Ação",
-                800000.00
+                299.35
             ),
             new Asset(
-                "BIGPROFIT",
-                "Big Profit Asset",
+                "META",
+                "Meta Platforms Inc.",
                 "Ação",
-                1000.00
+                350.25
             ),
             new Asset(
-                "BIGLOSS",
-                "Big Loss Asset",
+                "PLTR",
+                "Palantir Technologies Inc.",
                 "Ação",
-                0.19
+                25.75
             ),
             new Asset(
-                "BOUGHTTODAY",
-                "Bought Today Asset",
-                "Ação",
-                52.00
+                "NFLX",
+                "Netflix Inc.",
+                "Ação", 540.10
             ),
             new Asset(
-                "MINIMUM",
-                "Minimum Info Asset",
+                "AMD",
+                "Advanced Micro Devices Inc.",
                 "Ação",
-                45.00
+                105.60
+            ),
+            new Asset(
+                "INTC",
+                "Intel Corporation",
+                "Ação",
+                55.30
+            ),
+            new Asset(
+                "BTC",
+                "Bitcoin",
+                "Criptomoeda",
+                45000.00
+            ),
+            new Asset(
+                "ETH",
+                "Ethereum",
+                "Criptomoeda",
+                3000.00
+            ),
+            new Asset(
+                "LTC",
+                "Litecoin",
+                "Criptomoeda",
+                180.00
+            ),
+            new Asset(
+                "DOGE",
+                "Dogecoin",
+                "Criptomoeda",
+                0.25
             )
         );
         
