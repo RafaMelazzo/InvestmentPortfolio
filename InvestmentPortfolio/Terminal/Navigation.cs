@@ -53,7 +53,7 @@ public abstract class Navigation
         Console.Clear();
         AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
         AnsiConsole.MarkupLine("\n[bold blue]Bem-vindo de volta![/]");
-        Console.WriteLine("\n\nPor favor, insira suas credenciais para fazer o login.");
+        Console.WriteLine("\nPor favor, insira suas credenciais para fazer o login.");
         AnsiConsole.MarkupLine("\n[gray]Utilize os seguintes dados para teste:[/]" +
                                "\n[bold gray]Documento:[/] [gray]353.745.272-15[/]" +
                                "\n[bold gray]Senha:[/] [gray]I'mIronMan!2025[/]");
@@ -65,10 +65,11 @@ public abstract class Navigation
                     "35374527215", // Random valid CPF for testing purposes
                     "tony@starkindustries.com"
                 ),
-                "I'mIronMan!2025" // Example password for testing purposes
+                "I'mIronMan!2025"
             ),
             new Wallet(15213993.22)
         );
+        AddSampleDataToPortfolio(examplePortfolio);
         
         var document = AnsiConsole.Prompt(
             new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/gray]: ")
@@ -88,8 +89,18 @@ public abstract class Navigation
                     ? ValidationResult.Error("[red]Senha incorreta. Tente novamente.[/]")
                     : ValidationResult.Success())
         );
+
+        if (examplePortfolio.User.Person.Document == document
+            && examplePortfolio.User.Password == password)
+        {
+            WelcomeScreen(examplePortfolio);
+            return;
+        }
         
-        
+        Helper.ShowError("Ocorreu um erro inesperado ao fazer o login. Pressione qualquer tecla " +
+                         "para retornar à tela de login.");
+        Console.ReadKey();
+        LoginScreen();
     }
 
     private static void CreateAccount()
@@ -100,7 +111,7 @@ public abstract class Navigation
         Console.WriteLine("Por favor, insira seus dados para criar a conta.");
         
         var name = AnsiConsole.Prompt(
-            new TextPrompt<string>("Nome: ")
+            new TextPrompt<string>("\n\nNome: ")
                 .PromptStyle("bold blue")
                 .Validate(n => string.IsNullOrWhiteSpace(n)
                     ? ValidationResult.Error("[red]O nome não pode estar vazio.[/]")
@@ -193,7 +204,7 @@ public abstract class Navigation
         }
     }
 
-    public static void WelcomeScreen(Portfolio portfolio)
+    internal static void WelcomeScreen(Portfolio portfolio)
     {
         string option;
         do
@@ -570,5 +581,66 @@ public abstract class Navigation
             });
         
         AnsiConsole.Console.Profile.Width = defaultConsoleWidth;
+    }
+
+    static void AddSampleDataToPortfolio(Portfolio portfolio)
+    {
+        var sampleAssets = StockMarket.GetAllAssets();
+        foreach (var asset in sampleAssets)
+        {
+            var quantity = 1;
+            var paidPrice = asset.CurrentPrice;
+            var purchaseDate = DateTime.Today;
+            
+            switch (asset.Symbol)
+            {
+                case "STNE":
+                    quantity = 150;
+                    paidPrice = 7.45;
+                    purchaseDate = new DateTime(2022, 6, 1);
+                    break;
+                case "AAPL":
+                    quantity = 100;
+                    paidPrice = 150.92;
+                    purchaseDate = new DateTime(2022, 1, 15);
+                    break;
+                case "GOOGL":
+                    quantity = 50;
+                    paidPrice = 2800.50;
+                    purchaseDate = new DateTime(2022, 3, 10);
+                    break;
+                case "TSLA":
+                    quantity = 30;
+                    paidPrice = 702.91;
+                    purchaseDate = new DateTime(2022, 5, 20);
+                    break;
+            }
+
+            try
+            {
+                portfolio.BuyAsset(asset, quantity, paidPrice, purchaseDate);
+            }
+            catch (PortfolioException e)
+            {
+                Helper.ShowError(e.Message);
+            }
+            catch (Exception)
+            {
+                Helper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
+            }
+        }
+        
+        try
+        {
+            portfolio.BuyAsset(StockMarket.GetAssetBySymbol("STNE")!, 7);
+        }
+        catch (PortfolioException e)
+        {
+            Helper.ShowError(e.Message);
+        }
+        catch (Exception)
+        {
+            Helper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
+        }
     }
 }
