@@ -25,7 +25,7 @@ public abstract class Navigation
             AnsiConsole.MarkupLine("\n[bold orange3]OPÇÕES:[/]");
             AnsiConsole.MarkupLine("[bold blue] 1[/]: Login");
             AnsiConsole.MarkupLine("[bold blue] 2[/]: Criar Conta");
-            AnsiConsole.MarkupLine("[bold blue]99[/]: Sair");
+            AnsiConsole.MarkupLine("[bold blue]99[/]: Encerrar Programa");
             
             Console.Write("\nDigite o número da opção desejada: ");
             option = Console.ReadLine()!;
@@ -50,14 +50,6 @@ public abstract class Navigation
 
     private static void Login()
     {
-        Console.Clear();
-        AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
-        AnsiConsole.MarkupLine("\n[bold blue]Bem-vindo de volta![/]");
-        Console.WriteLine("\nPor favor, insira suas credenciais para fazer o login.");
-        AnsiConsole.MarkupLine("\n[gray]Utilize os seguintes dados para teste:[/]" +
-                               "\n[bold gray]Documento:[/] [gray]353.745.272-15[/]" +
-                               "\n[bold gray]Senha:[/] [gray]I'mIronMan!2025[/]");
-
         var examplePortfolio = new Portfolio(
             new User(
                 new Person(
@@ -71,11 +63,19 @@ public abstract class Navigation
         );
         AddSampleDataToPortfolio(examplePortfolio);
         
+        Console.Clear();
+        AnsiConsole.MarkupLine("\n[bold green]CARTEIRA DE INVESTIMENTOS[/]");
+        AnsiConsole.MarkupLine("\n[bold blue]Bem-vindo de volta![/]");
+        Console.WriteLine("\nPor favor, insira suas credenciais para fazer o login.");
+        AnsiConsole.MarkupLine("[gray]Utilize os seguintes dados para teste:[/]" +
+                               "\n[bold gray]Documento:[/] [gray]353.745.272-15[/]" +
+                               "\n[bold gray]Senha:[/] [gray]I'mIronMan!2025[/]\n");
+        
         var document = AnsiConsole.Prompt(
-            new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/gray]: ")
-                .PromptStyle("bold blue")
+            new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/]: ")
                 .Validate(
-                    d => examplePortfolio.User.Person.Document != d
+                    d => examplePortfolio.User.Person.Document
+                         != Helpers.CustomRegex.AnyNonDigitRegex().Replace(d, "")
                     ? ValidationResult.Error(
                         "[red]Documento inválido ou não encontrado no sistema. Tente novamente.[/]")
                     : ValidationResult.Success())
@@ -84,13 +84,13 @@ public abstract class Navigation
         var password = AnsiConsole.Prompt(
             new TextPrompt<string>("Senha: ")
                 .Secret()
-                .PromptStyle("bold blue")
                 .Validate(s => examplePortfolio.User.Password != s
                     ? ValidationResult.Error("[red]Senha incorreta. Tente novamente.[/]")
                     : ValidationResult.Success())
         );
 
-        if (examplePortfolio.User.Person.Document == document
+        if (examplePortfolio.User.Person.Document
+                == Helpers.CustomRegex.AnyNonDigitRegex().Replace(document, "")
             && examplePortfolio.User.Password == password)
         {
             WelcomeScreen(examplePortfolio);
@@ -112,15 +112,13 @@ public abstract class Navigation
         
         var name = AnsiConsole.Prompt(
             new TextPrompt<string>("\n\nNome: ")
-                .PromptStyle("bold blue")
                 .Validate(n => string.IsNullOrWhiteSpace(n)
                     ? ValidationResult.Error("[red]O nome não pode estar vazio.[/]")
                     : ValidationResult.Success())
         );
 
         var document = AnsiConsole.Prompt(
-            new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/gray]: ")
-                .PromptStyle("bold blue")
+            new TextPrompt<string>("Documento [gray](CPF ou CNPJ)[/]: ")
                 .Validate(d => !Person.IsValidDocument(d)
                     ? ValidationResult.Error(
                         "[red]Documento inválido. Tente novamente[/]")
@@ -129,7 +127,6 @@ public abstract class Navigation
         
         var email = AnsiConsole.Prompt(
             new TextPrompt<string>("E-mail: ")
-                .PromptStyle("bold blue")
                 .Validate(e => !Person.IsValidEmail(e)
                     ? ValidationResult.Error("[red]E-mail inválido. Tente novamente.[/]")
                     : ValidationResult.Success())
@@ -138,7 +135,6 @@ public abstract class Navigation
         var password = AnsiConsole.Prompt(
             new TextPrompt<string>("Senha: ")
                 .Secret()
-                .PromptStyle("bold blue")
                 .Validate(p => !User.ValidatePassword(p)
                     ? ValidationResult.Error(
                         "[red]A senha deve ter entre 8 e 15 caracteres, contendo letras minúsculas e maiúsculas, " +
@@ -148,8 +144,7 @@ public abstract class Navigation
 
         var deposit = AnsiConsole.Prompt(
             new TextPrompt<string>("Adicione fundos para comprar ações " +
-                                   "[gray]Deixe em branco para não adicionar no momento[/gray]: ")
-                .PromptStyle("bold blue")
+                                   "[gray]Deixe em branco para não adicionar no momento[/]: ")
                 .DefaultValue("0")
         );
         
@@ -218,7 +213,7 @@ public abstract class Navigation
             AnsiConsole.MarkupLine("[bold blue] 1[/]: Visualizar ativos da minha carteira");
             AnsiConsole.MarkupLine("[bold blue] 2[/]: Comprar ativos do mercado de ações");
             AnsiConsole.MarkupLine("[bold blue] 3[/]: Vender ativos da minha carteira");
-            AnsiConsole.MarkupLine("[bold blue]99[/]: Sair");
+            AnsiConsole.MarkupLine("[bold blue]99[/]: Deslogar do sistema");
 
             Console.Write("\nDigite o número da opção desejada: ");
             option = Console.ReadLine()!;
@@ -235,7 +230,7 @@ public abstract class Navigation
                     SellAssetFromPortfolio(portfolio);
                     break;
                 case "99":
-                    ExitProgram();
+                    Logout();
                     return;
                 default:
                     Helper.ShowError($"Opção \"{option}\" inválida.");
@@ -374,11 +369,25 @@ public abstract class Navigation
         Helper.BackToStart();
     }
 
+    private static void Logout()
+    {
+        Console.Clear();
+        AnsiConsole.MarkupLine("[bold orange3]Acesso encerrado com sucesso![/]");
+        AnsiConsole.Status()
+            .Spinner(Spinner.Known.Dots)
+            .SpinnerStyle("bold blue")
+            .Start("Retornando à tela de login...", ctx => {
+                Thread.Sleep(4000);
+            });
+        LoginScreen();
+    }
+
     private static void ExitProgram()
     {
         Console.Clear();
-        AnsiConsole.MarkupLine("\n[bold orange3]Saindo do sistema...[/]");
+        AnsiConsole.MarkupLine("\n[bold orange3]Fechando sistema...[/]");
         Console.WriteLine("\nObrigado!");
+        Environment.Exit(0);
     }
     
     private static string GetProfitOrLossArrow(Asset asset)
@@ -555,7 +564,8 @@ public abstract class Navigation
                 assetsTable.Columns[2]
                     .Width(10).NoWrap();
                 assetsTable.Columns[3]
-                    .Width(6).NoWrap().RightAligned().Footer($"[bold blue]{portfolio.GetAssetsTotalQuantity()}[/]");
+                    .Width(6).NoWrap().RightAligned()
+                    .Footer($"[bold blue]{portfolio.GetAssetsTotalQuantity()}[/]");
                 assetsTable.Columns[4]
                     .Width(15).NoWrap();
                 assetsTable.Columns[5]
@@ -583,56 +593,34 @@ public abstract class Navigation
         AnsiConsole.Console.Profile.Width = defaultConsoleWidth;
     }
 
-    static void AddSampleDataToPortfolio(Portfolio portfolio)
+    private static void AddSampleDataToPortfolio(Portfolio portfolio)
     {
-        var sampleAssets = StockMarket.GetAllAssets();
-        foreach (var asset in sampleAssets)
-        {
-            var quantity = 1;
-            var paidPrice = asset.CurrentPrice;
-            var purchaseDate = DateTime.Today;
-            
-            switch (asset.Symbol)
-            {
-                case "STNE":
-                    quantity = 150;
-                    paidPrice = 7.45;
-                    purchaseDate = new DateTime(2022, 6, 1);
-                    break;
-                case "AAPL":
-                    quantity = 100;
-                    paidPrice = 150.92;
-                    purchaseDate = new DateTime(2022, 1, 15);
-                    break;
-                case "GOOGL":
-                    quantity = 50;
-                    paidPrice = 2800.50;
-                    purchaseDate = new DateTime(2022, 3, 10);
-                    break;
-                case "TSLA":
-                    quantity = 30;
-                    paidPrice = 702.91;
-                    purchaseDate = new DateTime(2022, 5, 20);
-                    break;
-            }
-
-            try
-            {
-                portfolio.BuyAsset(asset, quantity, paidPrice, purchaseDate);
-            }
-            catch (PortfolioException e)
-            {
-                Helper.ShowError(e.Message);
-            }
-            catch (Exception)
-            {
-                Helper.ShowError("Ocorreu um erro inesperado ao adicionar um ativo ao seu portfolio.");
-            }
-        }
-        
+        StockMarket.GetAllAssets();
         try
         {
-            portfolio.BuyAsset(StockMarket.GetAssetBySymbol("STNE")!, 7);
+            portfolio.BuyAsset(
+                StockMarket.GetAssetBySymbol("STNE")!,
+                150,
+                7.45,
+                new DateTime(2022, 6, 1));
+            
+            portfolio.BuyAsset(
+                StockMarket.GetAssetBySymbol("AAPL")!,
+                100,
+                150.92,
+                new DateTime(2022, 1, 15));
+            
+            portfolio.BuyAsset(
+                StockMarket.GetAssetBySymbol("GOOGL")!,
+                50,
+                2800.50,
+                new DateTime(2022, 3, 10));
+            
+            portfolio.BuyAsset(
+                StockMarket.GetAssetBySymbol("TSLA")!,
+                30,
+                702.91,
+                new DateTime(2022, 5, 20));
         }
         catch (PortfolioException e)
         {
