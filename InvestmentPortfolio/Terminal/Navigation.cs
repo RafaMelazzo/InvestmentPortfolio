@@ -142,35 +142,14 @@ public abstract class Navigation
                     : ValidationResult.Success())
         );
 
-        var deposit = AnsiConsole.Prompt(
-            new TextPrompt<string>("Adicione fundos para comprar ações " +
+        var initialBalance = AnsiConsole.Prompt(
+            new TextPrompt<double>("Adicione fundos para comprar ações " +
                                    "[gray]Deixe em branco para não adicionar no momento[/]: ")
-                .DefaultValue("0")
+                .Validate(d => d < 0
+                    ? ValidationResult.Error("[red]O valor do depósito não pode ser negativo.[/]")
+                    : ValidationResult.Success())
+                .DefaultValue(0)
         );
-        
-        double initialBalance;
-        try
-        {
-            initialBalance = string.IsNullOrWhiteSpace(deposit) ? 0 : Convert.ToDouble(deposit);
-            if (initialBalance < 0)
-                throw new ArgumentOutOfRangeException("Initial balance cannot be negative.");
-        }
-        catch (FormatException e)
-        {
-            Helper.ShowError(e.Message + " Definindo saldo inicial como \"R$ 0,00\".");
-            initialBalance = 0;
-        }
-        catch (ArgumentOutOfRangeException e)
-        {
-            Helper.ShowError(e.Message + " Definindo saldo inicial como \"R$ 0,00\".");
-            initialBalance = 0;
-        }
-        catch (Exception)
-        {
-            Helper.ShowError("Ocorreu um erro inesperado ao definir o saldo inicial. " +
-                             "Definindo saldo como \"R$ 0,00\".");
-            initialBalance = 0;
-        }
         
         try
         {
@@ -179,7 +158,7 @@ public abstract class Navigation
             var wallet = new Wallet(initialBalance);
             var portfolio = new Portfolio(user, wallet);
         
-            AnsiConsole.MarkupLine("\n\n[green]Conta criada com sucesso![/green]");
+            AnsiConsole.MarkupLine("\n\n[green]Conta criada com sucesso![/]");
             Console.WriteLine("\n\nPressione qualquer tecla para acessar o sistema.");
             Console.ReadKey();
             WelcomeScreen(portfolio);
@@ -377,7 +356,7 @@ public abstract class Navigation
             .Spinner(Spinner.Known.Dots)
             .SpinnerStyle("bold blue")
             .Start("Retornando à tela de login...", ctx => {
-                Thread.Sleep(4000);
+                Thread.Sleep(3000);
             });
         LoginScreen();
     }
