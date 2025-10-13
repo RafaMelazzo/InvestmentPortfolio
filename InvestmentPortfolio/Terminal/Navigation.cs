@@ -4,7 +4,6 @@ using InvestmentPortfolio.Services;
 using Spectre.Console;
 using ArgumentException = InvestmentPortfolio.Exceptions.ArgumentException;
 using ArgumentOutOfRangeException = InvestmentPortfolio.Exceptions.ArgumentOutOfRangeException;
-using FormatException = InvestmentPortfolio.Exceptions.FormatException;
 
 namespace InvestmentPortfolio.Terminal;
 
