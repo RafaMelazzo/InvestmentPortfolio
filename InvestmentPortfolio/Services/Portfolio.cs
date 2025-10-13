@@ -125,8 +125,8 @@ public class Portfolio
 
             try
             {
-                Asset.AddQuantityToAsset(asset, quantity);
                 Wallet.Withdraw(paidValue * quantity);
+                Asset.AddQuantityToAsset(asset, quantity);
             }
             catch (PortfolioException e)
             {
@@ -150,8 +150,8 @@ public class Portfolio
             purchaseDate
         );
         
-        Assets.Add(newAsset);
         Wallet.Withdraw(paidValue * quantity);
+        Assets.Add(newAsset);
     }
 
     public void SellAsset(List<Asset> assets, int sellingQuantity = 1)
