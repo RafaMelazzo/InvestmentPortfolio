@@ -192,6 +192,7 @@ public abstract class Navigation
             AnsiConsole.MarkupLine("[bold blue] 1[/]: Visualizar ativos da minha carteira");
             AnsiConsole.MarkupLine("[bold blue] 2[/]: Comprar ativos do mercado de ações");
             AnsiConsole.MarkupLine("[bold blue] 3[/]: Vender ativos da minha carteira");
+            AnsiConsole.MarkupLine("[bold blue] 4[/]: Visualizar meu perfil");
             AnsiConsole.MarkupLine("[bold blue]99[/]: Deslogar do sistema");
 
             Console.Write("\nDigite o número da opção desejada: ");
@@ -207,6 +208,9 @@ public abstract class Navigation
                     break;
                 case "3":
                     SellAssetFromPortfolio(portfolio);
+                    break;
+                case "4":
+                    ViewProfile(portfolio);
                     break;
                 case "99":
                     Logout();
@@ -343,6 +347,110 @@ public abstract class Navigation
         catch (Exception)
         {
             Helper.ShowError("Ocorreu um erro inesperado ao vender o ativo.");
+        }
+        
+        Helper.BackToStart();
+    }
+    
+    private static void ViewProfile(Portfolio portfolio)
+    {
+        Console.Clear();
+
+        GetAccountInfo(portfolio);
+        
+        string option;
+        do
+        {
+            AnsiConsole.MarkupLine("\n[bold orange3]OPÇÕES DE PERFIL:[/]");
+            AnsiConsole.MarkupLine("[bold blue] 1[/]: Adicionar fundos à conta");
+            AnsiConsole.MarkupLine("[bold blue] 2[/]: Remover fundos da conta");
+            AnsiConsole.MarkupLine("[bold blue]99[/]: Voltar ao menu principal");
+
+            Console.Write("\nDigite o número da opção desejada: ");
+            option = Console.ReadLine()!;
+
+            switch (option)
+            {
+                case "1":
+                    AddFundsToWallet(portfolio);
+                    break;
+                case "2":
+                    RemoveFundsFromWallet(portfolio);
+                    break;
+                case "99":
+                    return;
+                default:
+                    Helper.ShowError($"Opção \"{option}\" inválida.");
+                    break;
+            }
+        } while (option != "99");
+    }
+    
+    private static void AddFundsToWallet(Portfolio portfolio)
+    {
+        Console.Clear();
+
+        GetAccountInfo(portfolio);
+            
+        AnsiConsole.Markup("\n\n[bold orange3]ADICIONAR FUNDOS À CONTA:[/]\n");
+        
+        var amount = AnsiConsole.Prompt(
+            new TextPrompt<double>("Digite o valor que deseja adicionar: ")
+                .Validate(
+                    a => a <= 0
+                        ? ValidationResult.Error("[red]O valor deve ser maior que zero.[/]")
+                        : ValidationResult.Success())
+        );
+
+        try
+        {
+            portfolio.Wallet.Deposit(amount);
+            AnsiConsole.Markup($"\nVocê adicionou [bold green]{Helpers.Currency.DoubleToCurrency(amount)}[/] " +
+                               "à sua conta com sucesso!");
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            Helper.ShowError(e.Message);
+        }
+        catch (Exception)
+        {
+            Helper.ShowError("Ocorreu um erro inesperado ao adicionar fundos à sua conta.");
+        }
+        
+        Helper.BackToStart();
+    }
+    
+    private static void RemoveFundsFromWallet(Portfolio portfolio)
+    {
+        Console.Clear();
+
+        GetAccountInfo(portfolio);
+            
+        AnsiConsole.Markup("\n\n[bold orange3]REMOVER FUNDOS DA CONTA:[/]\n");
+        
+        var amount = AnsiConsole.Prompt(
+            new TextPrompt<double>("Digite o valor que deseja remover: ")
+                .Validate(
+                    a => a <= 0
+                        ? ValidationResult.Error("[red]O valor deve ser maior que zero.[/]")
+                        : a > portfolio.Wallet.Balance
+                        ? ValidationResult.Error("[red]O valor não pode ser maior que o saldo disponível na conta.[/]")
+                        : ValidationResult.Success())
+        );
+
+        try
+        {
+            portfolio.Wallet.Withdraw(amount);
+            AnsiConsole.Markup($"\nVocê removeu [bold red]{Helpers.Currency.DoubleToCurrency(amount)}[/] " +
+                               "da sua conta com sucesso!");
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            Helper.ShowError(e.Message);
+        }
+        catch (Exception)
+        {
+            Helper.ShowError("Ocorreu um erro inesperado ao remover fundos da sua conta.");
         }
         
         Helper.BackToStart();
