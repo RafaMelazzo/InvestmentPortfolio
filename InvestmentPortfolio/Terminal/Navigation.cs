@@ -362,7 +362,7 @@ public abstract class Navigation
         {
             AnsiConsole.MarkupLine("\n[bold orange3]OPÇÕES DE PERFIL:[/]");
             AnsiConsole.MarkupLine("[bold blue] 1[/]: Adicionar fundos à conta");
-            AnsiConsole.MarkupLine("[bold blue] 2[/]: Remover fundos da conta");
+            AnsiConsole.MarkupLine("[bold blue] 2[/]: Sacar fundos da conta");
             AnsiConsole.MarkupLine("[bold blue]99[/]: Voltar ao menu principal");
 
             Console.Write("\nDigite o número da opção desejada: ");
@@ -371,10 +371,10 @@ public abstract class Navigation
             switch (option)
             {
                 case "1":
-                    AddFundsToWallet(portfolio);
+                    DepositFundsToWallet(portfolio);
                     break;
                 case "2":
-                    RemoveFundsFromWallet(portfolio);
+                    WithdrawFundsFromWallet(portfolio);
                     break;
                 case "99":
                     return;
@@ -385,7 +385,7 @@ public abstract class Navigation
         } while (option != "99");
     }
     
-    private static void AddFundsToWallet(Portfolio portfolio)
+    private static void DepositFundsToWallet(Portfolio portfolio)
     {
         Console.Clear();
 
@@ -419,7 +419,7 @@ public abstract class Navigation
         Helper.BackToStart();
     }
     
-    private static void RemoveFundsFromWallet(Portfolio portfolio)
+    private static void WithdrawFundsFromWallet(Portfolio portfolio)
     {
         Console.Clear();
 
